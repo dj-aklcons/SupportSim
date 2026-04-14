@@ -1,0 +1,1122 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Support Team Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+
+        #game-interface { display: none; height: 100vh; flex-direction: column; }
+
+        #field-side {
+            height: 45%;
+            background: linear-gradient(to bottom, #1e293b, #334155);
+            transform: rotate(180deg);
+            position: relative;
+            border-bottom: 4px solid #475569;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            padding: 15px 0;
+            overflow: hidden;
+        }
+
+        #event-alert-box {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 220px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #334155;
+            padding: 10px;
+            border-radius: 4px;
+            z-index: 100;
+            pointer-events: none;
+            transition: all 0.3s;
+        }
+        #event-alert-text {
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.3;
+        }
+        .alert-flash-red {
+            animation: flash-red 0.5s infinite alternate;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+        @keyframes flash-red {
+            from { background: rgba(0, 0, 0, 0.85); }
+            to { background: rgba(153, 27, 27, 0.95); }
+        }
+
+        #break-area {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%) rotate(180deg);
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            pointer-events: auto;
+            z-index: 60;
+        }
+
+        .break-avatar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .energy-ring {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border: 2px solid #334155;
+        }
+
+        .energy-progress-svg {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            transform: rotate(-90deg);
+        }
+
+        .gate-slider-track {
+            width: 280px;
+            height: 60px;
+            background: #020617;
+            border-radius: 30px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            border: 2px solid #334155;
+            z-index: 30;
+            order: 3; 
+        }
+
+        .visitor {
+            width: 85px;
+            height: 85px;
+            background: #f97316;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 44px;
+            transition: box-shadow 0.3s, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+            position: relative;
+            z-index: 10;
+            order: 2;
+        }
+        .visitor.active { box-shadow: 0 0 30px #fbbf24; border: 4px solid #fbbf24; }
+
+        .speech-bubble {
+            background: white;
+            color: #1e293b;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            width: 180px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 20;
+            pointer-events: none;
+            order: 1;
+            transition: opacity 0.3s;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0 10px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+        }
+
+        #neutral-zone {
+            height: 10% !important;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 50;
+        }
+
+        #transfer-slot {
+            width: 85%;
+            height: 60%;
+            background: #1f2937;
+            border: 2px solid #374151;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #4b5563;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        #office-side { height: 45%; background: #0f172a; position: relative; padding: 10px; }
+
+        .gate-knob {
+            width: 50px;
+            height: 50px;
+            background: #64748b;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+
+        .track-label {
+            position: absolute;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            width: 80px;
+            text-align: center;
+            pointer-events: none;
+        }
+        .label-decline { left: 15px; color: #ef4444; }
+        .label-admit { right: 15px; color: #22c55e; }
+
+        .ppe-icon {
+            width: 38px;
+            height: 38px;
+            background: #1e293b;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            border: 1px solid #334155;
+            position: relative;
+        }
+
+        .game-card {
+            width: 100px;
+            height: 140px;
+            background: white;
+            color: #1e293b;
+            border-radius: 6px;
+            padding: 10px;
+            position: fixed;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+        }
+
+        .slotted-card {
+            position: absolute !important;
+            transform: translate(-50%, -20%) scale(0.6) !important;
+            left: 50% !important;
+            top: 0 !important;
+            box-shadow: none !important;
+            pointer-events: none;
+            z-index: 5 !important;
+        }
+
+        .slotted-exit {
+            transition: transform 1s cubic-bezier(0.45, 0, 0.55, 1) !important;
+            transform: translate(-50%, 100%) scale(0.6) !important;
+        }
+
+        .ppe-drag {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: fixed;
+            z-index: 9999;
+            touch-action: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            cursor: grab;
+        }
+        .ppe-drag:active { cursor: grabbing; }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .flipped { transform: rotate(180deg); }
+
+        .overlay-screen {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            padding: 14px 36px;
+            border-radius: 99px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 20px;
+        }
+
+        #id-slot {
+            width: 70px;
+            height: 70px;
+            border: 2px solid #475569;
+            background: #020617;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden; 
+            display: flex;
+            justify-content: center;
+        }
+
+        .registry-check {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #475569;
+            border-radius: 3px;
+            background: #0f172a;
+            cursor: pointer;
+            position: relative;
+        }
+        .registry-check:checked {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .registry-check:checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 10px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -55%);
+        }
+
+        .registry-row {
+            padding: 4px 6px;
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 4px;
+            border-left: 2px solid #3b82f6;
+            margin-bottom: 6px;
+            position: relative;
+        }
+        .registry-row.on-break {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+        .energy-bar-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+        }
+        .energy-bar {
+            height: 100%;
+            transition: width 0.5s, background 0.5s;
+        }
+
+        #activity-monitor {
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 4px;
+            padding: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            height: 120px;
+            overflow-y: auto;
+            color: #4ade80;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .log-entry { margin-bottom: 2px; border-bottom: 1px solid rgba(74, 222, 128, 0.1); padding-bottom: 2px; }
+        .log-entry.error { color: #ef4444; }
+        .log-entry.warn { color: #fbbf24; }
+        .log-entry.ppe { color: #3b82f6; border-left: 2px solid #3b82f6; padding-left: 4px; }
+        
+        #current-time-display {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #fbbf24;
+            letter-spacing: 1px;
+            background: #1e293b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #334155;
+        }
+
+        .res-count {
+            position: absolute;
+            background: #2563eb;
+            color: white;
+            font-size: 7px;
+            font-weight: bold;
+            border-radius: 99px;
+            min-width: 12px;
+            height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: -3px;
+            right: -3px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="screen-title" class="overlay-screen">
+    <h1 class="text-4xl font-black mb-2 text-blue-400 uppercase tracking-tighter">Support Team Simulator</h1>
+    <p class="text-gray-400 max-w-sm mb-6">Conservation Site Operations: Access & Safety Control.</p>
+    <button class="btn-primary" onclick="showStageIntro('1')">START MISSION</button>
+</div>
+
+<div id="screen-stage-intro" class="overlay-screen" style="display: none;">
+    <h2 id="intro-title" class="text-2xl font-bold text-yellow-500 mb-4 uppercase"></h2>
+    <div id="intro-time" class="text-blue-400 font-mono text-lg mb-2"></div>
+    <p id="intro-desc" class="text-gray-300 mb-6 italic max-w-md"></p>
+    <div class="bg-gray-800/50 p-4 rounded-lg text-left text-sm mb-6 w-full max-w-md border border-gray-700">
+        <h4 class="font-bold text-blue-400 mb-2 uppercase">Current Orders:</h4>
+        <ul id="intro-orders" class="list-disc ml-5 space-y-1"></ul>
+    </div>
+    <button class="btn-primary" onclick="startStage()">DEPLOY TO SITE</button>
+</div>
+
+<div id="screen-summary" class="overlay-screen" style="display: none;">
+    <h2 class="text-3xl font-black text-white mb-2 uppercase">Shift Summary</h2>
+    <div id="summary-stats" class="w-full max-w-xs space-y-3 mb-8 text-left bg-gray-900 p-6 rounded-xl border border-gray-800"></div>
+    <button class="btn-primary" id="btn-next-shift" onclick="nextStageFromSummary()">NEXT SHIFT</button>
+</div>
+
+<div id="game-interface">
+    <div id="field-side">
+        <div id="event-alert-box">
+            <div id="event-alert-text">STANDBY FOR VISITORS</div>
+        </div>
+        <div id="break-area"></div>
+        <div class="gate-slider-track" id="gate-track">
+            <span class="track-label label-decline">DECLINE</span>
+            <div id="gate-knob" class="gate-knob"><span id="knob-icon" class="text-xl">🔒</span></div>
+            <span class="track-label label-admit">ADMIT</span>
+        </div>
+        <div id="visitors-container" class="flex flex-col items-center"></div>
+    </div>
+
+    <div id="neutral-zone">
+        <div id="transfer-slot">AIRLOCK TRANSFER SLOT</div>
+    </div>
+
+    <div id="office-side" class="flex gap-3">
+        <div class="flex-1 border-r border-slate-800 pr-2 flex flex-col h-full">
+            <div class="flex items-center justify-between mb-1">
+                <h3 class="text-[9px] font-black text-blue-400 uppercase">Personnel On-Site</h3>
+                <div class="flex gap-2 text-[7px] font-bold text-slate-500">
+                    <span class="w-8 text-center">ONSITE</span>
+                    <span class="w-8 text-center">BREAK</span>
+                </div>
+            </div>
+            <div id="registry-list" class="flex-1 text-[9px] space-y-1 overflow-y-auto pr-1"></div>
+        </div>
+
+        <div class="w-64 flex flex-col h-full">
+            <div class="flex gap-3 mb-2">
+                <div class="grid grid-cols-2 gap-1.5 shrink-0">
+                    <div class="ppe-icon" data-type="mask" id="stock-mask">
+                        <span>😷</span>
+                        <span id="res-mask" class="res-count">0</span>
+                    </div>
+                    <div class="ppe-icon" data-type="gloves" id="stock-gloves">
+                        <span>🧤</span>
+                        <span id="res-gloves" class="res-count">0</span>
+                    </div>
+                    <div class="ppe-icon" data-type="vest" id="stock-vest">
+                        <span>🦺</span>
+                        <span id="res-vest" class="res-count">0</span>
+                    </div>
+                    <div class="ppe-icon" data-type="walkie" id="stock-walkie">
+                        <span>📻</span>
+                        <span id="res-walkie" class="res-count">∞</span>
+                    </div>
+                    <div class="ppe-icon" data-type="clipboard" id="stock-clipboard">
+                        <span>📋</span>
+                        <span id="res-clipboard" class="res-count">∞</span>
+                    </div>
+                    <div class="ppe-icon" data-type="rubbish" id="stock-rubbish">
+                        <span>🗑️</span>
+                        <span id="res-rubbish" class="res-count">∞</span>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center">
+                    <h3 class="text-[9px] font-black text-slate-500 uppercase mb-1">ID SLOT</h3>
+                    <div id="id-slot"></div>
+                    <div id="current-time-display" class="mt-2 text-[10px]">00:00</div>
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col">
+                <h3 class="text-[9px] font-black text-slate-500 uppercase mb-1">Operational Log</h3>
+                <div id="activity-monitor"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STAGES = {
+        '1': {
+            title: "A Burst Pipe",
+            startTime: "11:39",
+            desc: "The cleaner has reported a leak in the level 2 bathrooms. Water has flooded the floor so we want to control it before it spreads. An RFS is raised, contractors are on their way!",
+            orders: ["Verify Response IDs.", "Gloves mandatory for site entry."],
+            registry: [
+                { id: "v1", name: "Libby Rarian", role: "Librarian Research", org: "Libraries", authorised: true, ppe: ["gloves"], msg: "Has anyone checked the store below?", energy: 100, breakRequired: false },
+                { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I’m here for the pipe repair.", energy: 100, breakRequired: false },
+                { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Something about water?", energy: 100, breakRequired: false }
+            ],
+            resources: { mask: 0, gloves: 6, vest: 4, walkie: 99, clipboard: 99, rubbish: 99 },
+            target: 3,
+            next: '2'
+        },
+        '2': {
+            title: "Air Conditioning Failure",
+            startTime: "08:22",
+            desc: "Heritage staff have arrived at work and discovered the storeroom feels unusually warm. An RFS has been raised, and Conservation were called to check out the dataloggers.",
+            orders: ["Masks + Gloves mandatory for mould check.", "Verify Heritage Authority IDs.", "No public access allowed."],
+            registry: [
+                { id: "v4", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Hope the aircon hasn't been off for a long time!", energy: 70, breakRequired: true },
+                { id: "v5", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I'm gonna check for mould around the place.", energy: 50, breakRequired: true },
+                { id: "v6", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I'll go up to the Plant Room after this.", energy: 100, breakRequired: false },
+                { id: "v7", name: "Unknown", role: "Public", org: "None", authorised: false, ppe: [], msg: "Can I use the toilet that still works?", energy: 100, breakRequired: false }
+            ],
+            resources: { mask: 4, gloves: 4, vest: 2, walkie: 99, clipboard: 99, rubbish: 99 },
+            target: 4,
+            next: '3A'
+        },
+        '3A': {
+            title: "Leaking Water Fountain",
+            startTime: "15:00",
+            desc: "A Research Librarian has discovered water leaking in the Upper Basement. It's coming from the Ground Floor water fountain, so we'll need contractors upstairs, and a check for mould downstairs.",
+            orders: ["Mould Hazard: Full Respirators + Gloves + Vest.", "Ensure staff energy levels stay high.", "Monitor Salvage Team closely."],
+            registry: [
+                { id: "v8", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Not again!", energy: 100, breakRequired: true },
+                { id: "v9", name: "Konsa Vazion", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Are the plumbers here yet?", energy: 80, breakRequired: true },
+                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I've got an RH sensor.", energy: 100, breakRequired: true },
+                { id: "v11", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "We came as soon as we could", energy: 100, breakRequired: false },
+                { id: "v12", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I've turned off the mains.", energy: 100, breakRequired: false },
+                { id: "v13", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: [], msg: "Anyone found any mould?", energy: 100, breakRequired: false },
+                { id: "v14", name: "Sal Vager", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Here's the Disaster kit if we need it.", energy: 60, breakRequired: true },
+                { id: "v15", name: "Annie de Break", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Those are Heritage serials!", energy: 20, breakRequired: true },
+                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Need me to order more supplies?", energy: 50, breakRequired: true },
+                { id: "v17", name: "Reporter", role: "Press", org: "The CBD Seer", authorised: false, ppe: [], msg: "Anything valuable in there?", energy: 100, breakRequired: false }
+            ],
+            resources: { mask: 10, gloves: 10, vest: 10, walkie: 99, clipboard: 99, rubbish: 99 },
+            target: 10,
+            next: '3B'
+        },
+        '3B': {
+            development: true,
+            alertMsg: "EVENT DEVELOPMENT - MOULD DISCOVERED!",
+            registry: [
+                { id: "v18", name: "Dizzy Astrous", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Uh Oh, looks like we found mould!", energy: 20, breakRequired: true },
+                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got a kit for taking a mould sample", energy: 10, breakRequired: true },
+                { id: "v20", name: "Klee Anup", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "My first mould outbreak!!", energy: 30, breakRequired: true },
+                { id: "v21", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Leak’s stopped but we’ve found more downstairs", energy: 100, breakRequired: false },
+                { id: "v22", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Where do you want these soaking pads?", energy: 100, breakRequired: false },
+                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "I’m gonna change the air-con filters now", energy: 100, breakRequired: false },
+                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve been called in - what’s happening?", energy: 5, breakRequired: true },
+                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Do you need a break?!", energy: 20, breakRequired: true },
+                { id: "v26", name: "Preppe de Saster", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got some food supplies for the team", energy: 50, breakRequired: true },
+                { id: "v27", name: "Mayor", role: "Regional", org: "Council", authorised: false, ppe: [], msg: "I need to check everything’s done right", energy: 100, breakRequired: false }
+            ],
+            target: 10,
+            next: '3C'
+        },
+        '3C': {
+            development: true,
+            alertMsg: "EVENT DEVELOPMENT - DISASTER STABILISED!",
+            registry: [
+                { id: "v8", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask"], msg: "Can I get some more masks?", energy: -1, breakRequired: true },
+                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Can you order more freezer bags?", energy: -1, breakRequired: true },
+                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I think we’ll need more trolleys down here", energy: -1, breakRequired: true },
+                { id: "v28", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: [], msg: "We’ve got more soaking pads", energy: 100, breakRequired: false },
+                { id: "v29", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Where can I park my car?", energy: 100, breakRequired: false },
+                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "I’m gonna change the air-con filters now", energy: 100, breakRequired: false },
+                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: [], msg: "Anything new going on?", energy: -1, breakRequired: true },
+                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: [], msg: "Did I see the Mayor here?!", energy: -1, breakRequired: true },
+                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "Do you think we need a freezer container?", energy: -1, breakRequired: true },
+                { id: "v30", name: "Curator", role: "Heritage", org: "Libraries", authorised: false, ppe: [], msg: "Can I just grab my favourite serial?", energy: 100, breakRequired: false }
+            ],
+            target: 10,
+            next: null
+        }
+    };
+
+    let state = {
+        currentStageKey: '1',
+        resources: {},
+        stats: { processed: 0, safety: 0, unauthorizedDenied: 0 },
+        isIdScanned: false,
+        activeVisitor: null,
+        activeCard: null,
+        gameTimeMinutes: 0,
+        timerInterval: null,
+        staffOnSite: [], // ONLY those admitted and authorised
+        pool: [],
+        suppliesQueue: [] // { person, returnAfter (processedCount) }
+    };
+
+    function setAlert(text, isCritical = false) {
+        const box = document.getElementById('event-alert-box');
+        const display = document.getElementById('event-alert-text');
+        display.innerText = text;
+        if (isCritical) box.classList.add('alert-flash-red');
+        else box.classList.remove('alert-flash-red');
+    }
+
+    function formatGameTime(totalMinutes) {
+        const h = Math.floor(totalMinutes / 60) % 24;
+        const m = Math.floor(totalMinutes % 60);
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+    }
+
+    function getEnergyColor(pct) {
+        if (pct <= 20) return '#ef4444';
+        const r = Math.floor(255 * (1 - (pct - 20) / 80));
+        const g = Math.floor(255 * ((pct - 20) / 80));
+        return `rgb(${r}, ${g}, 0)`;
+    }
+
+    function log(message, type = 'info') {
+        const monitor = document.getElementById('activity-monitor');
+        if (!monitor) return;
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        const timestamp = formatGameTime(state.gameTimeMinutes);
+        entry.innerText = `[${timestamp}] > ${message}`;
+        monitor.prepend(entry);
+    }
+
+    function showStageIntro(key) {
+        state.currentStageKey = key;
+        const s = STAGES[key];
+        
+        // Wipe personnel list only if it's a new disaster (not a development)
+        if (!s.development) {
+            state.staffOnSite = [];
+        }
+
+        document.getElementById('screen-title').style.display = 'none';
+        document.getElementById('screen-summary').style.display = 'none';
+        document.getElementById('screen-stage-intro').style.display = 'flex';
+        document.getElementById('intro-title').innerText = s.title;
+        document.getElementById('intro-time').innerText = `EVENT START: ${s.startTime}`;
+        document.getElementById('intro-desc').innerText = s.desc;
+        document.getElementById('intro-orders').innerHTML = s.orders.map(o => `<li>${o}</li>`).join('');
+        const [h, m] = s.startTime.split(':').map(Number);
+        state.gameTimeMinutes = h * 60 + m;
+    }
+
+    function startStage() {
+        const s = STAGES[state.currentStageKey];
+        if (s.resources) state.resources = { ...s.resources };
+        state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0 };
+        state.suppliesQueue = [];
+        
+        initializePool(s);
+
+        document.getElementById('screen-stage-intro').style.display = 'none';
+        document.getElementById('game-interface').style.display = 'flex';
+        document.getElementById('activity-monitor').innerHTML = '';
+        document.getElementById('id-slot').innerHTML = '';
+        
+        const [h, m] = s.startTime.split(':').map(Number);
+        state.gameTimeMinutes = h * 60 + m;
+        document.getElementById('current-time-display').innerText = formatGameTime(state.gameTimeMinutes);
+        
+        if (state.timerInterval) clearInterval(state.timerInterval);
+        state.timerInterval = setInterval(() => {
+            state.gameTimeMinutes += 1;
+            document.getElementById('current-time-display').innerText = formatGameTime(state.gameTimeMinutes);
+            state.staffOnSite.forEach(p => {
+                if (!p.breakRequired) return;
+                if (p.onBreak) p.energy = Math.min(100, p.energy + 10);
+                else p.energy = Math.max(0, p.energy - 3);
+            });
+            updateRegistryUI();
+            updateBreakAreaUI();
+        }, 10000);
+
+        updateResUI();
+        updateRegistryUI();
+        spawnVisitor();
+        setupSlider();
+        setupSupplyInteraction();
+        log("Shift started.");
+        setAlert("Standby for Visitors");
+    }
+
+    function initializePool(s) {
+        const shuffle = (array) => array.sort(() => Math.random() - 0.5);
+        
+        // Handle energy inheritance for 3B/3C
+        const rawPool = s.registry.map(p => {
+            const existing = state.staffOnSite.find(e => e.id === p.id);
+            if (existing && p.energy === -1) {
+                return { ...existing, msg: p.msg, ppe: p.ppe, admitted: false };
+            }
+            return { ...p, energy: p.energy === -1 ? 100 : p.energy, admitted: false };
+        });
+
+        state.pool = shuffle([...rawPool]);
+    }
+
+    function updateRegistryUI() {
+        const list = document.getElementById('registry-list');
+        // Filter to only show people who are on-site (admitted AND authorised)
+        const visibleOnSite = state.staffOnSite;
+
+        if (visibleOnSite.length === 0) {
+            list.innerHTML = `<div class="text-[8px] text-slate-600 italic py-4 text-center">NO PERSONNEL ON-SITE</div>`;
+            return;
+        }
+
+        list.innerHTML = visibleOnSite.map(p => {
+            return `
+            <div class="registry-row ${p.onBreak ? 'on-break' : ''}" id="reg-${p.id}">
+                <div class="flex items-center justify-between">
+                    <div class="flex-grow">
+                        <b class="text-white">${p.name}</b><br/>
+                        <span class="opacity-50 text-[7px] uppercase">${p.role}</span>
+                    </div>
+                    <div class="flex items-center gap-6 px-3">
+                        <input type="checkbox" class="registry-check" checked onchange="toggleOnsite('${p.id}', this.checked)">
+                        <input type="checkbox" class="registry-check" ${p.onBreak ? 'checked disabled' : ''} onchange="toggleBreak('${p.id}', this.checked)">
+                    </div>
+                </div>
+                <div class="energy-bar-container">
+                    <div class="energy-bar" style="width: ${p.energy}%; background: ${getEnergyColor(p.energy)};"></div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function toggleOnsite(id, isChecked) {
+        if (!isChecked) {
+            const person = state.staffOnSite.find(p => p.id === id);
+            if (!person) return;
+            // Re-check the checkbox visually while we wait for user input
+            const checkbox = document.querySelector(`#reg-${id} .registry-check`);
+            if (checkbox) checkbox.checked = true;
+            showSuppliesPopup(person);
+        }
+    }
+
+    function showSuppliesPopup(person) {
+        // Remove any existing popup
+        const existing = document.getElementById('supplies-popup');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'supplies-popup';
+        overlay.style.cssText = `
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            z-index: 20000; display: flex; align-items: center; justify-content: center;
+        `;
+
+        const box = document.createElement('div');
+        box.style.cssText = `
+            background: #1e293b; border: 2px solid #475569; border-radius: 12px;
+            padding: 28px 32px; text-align: center; max-width: 300px; width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        `;
+        box.innerHTML = `
+            <p style="color:#e2e8f0; font-size:14px; font-weight:700; margin-bottom:20px; line-height:1.5;">
+                Send <span style="color:#fbbf24;">${person.name}</span> for supplies?
+            </p>
+            <div style="display:flex; gap:12px; justify-content:center;">
+                <button id="supplies-yes" style="background:#22c55e; color:white; padding:10px 28px; border-radius:99px; font-weight:800; font-size:13px; letter-spacing:1px; border:none; cursor:pointer;">YES</button>
+                <button id="supplies-no" style="background:#ef4444; color:white; padding:10px 28px; border-radius:99px; font-weight:800; font-size:13px; letter-spacing:1px; border:none; cursor:pointer;">NO</button>
+            </div>
+        `;
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        document.getElementById('supplies-yes').onclick = () => {
+            overlay.remove();
+            sendForSupplies(person);
+        };
+        document.getElementById('supplies-no').onclick = () => {
+            overlay.remove();
+            log(`${person.name} remains on-site.`);
+            // Leave them in staffOnSite, checkbox stays ticked
+        };
+    }
+
+    function sendForSupplies(person) {
+        // Remove from on-site list
+        state.staffOnSite = state.staffOnSite.filter(p => p.id !== person.id);
+        log(`${person.name} sent for supplies.`);
+        updateRegistryUI();
+        // Queue to return after 2 more people are processed
+        state.suppliesQueue.push({ person, returnAfter: state.stats.processed + 2 });
+    }
+
+    function checkSuppliesReturns() {
+        const returning = state.suppliesQueue.filter(q => state.stats.processed >= q.returnAfter);
+        state.suppliesQueue = state.suppliesQueue.filter(q => state.stats.processed < q.returnAfter);
+        returning.forEach(q => admitReturningSupplier(q.person));
+    }
+
+    function admitReturningSupplier(person) {
+        const isSupport = person.role === 'Support Team';
+        const returnMsg = isSupport ? 'I have more supplies!' : "I didn't know how to get supplies!";
+        state.pool.unshift({ ...person, msg: returnMsg, _supplyReturn: true, admitted: false });
+        log(`${person.name} is returning — queued next.`);
+    }
+
+    function toggleBreak(id, isChecked) {
+        const person = state.staffOnSite.find(p => p.id === id);
+        if (person && isChecked) {
+            person.onBreak = true;
+            log(`${person.name} is now on break.`);
+            updateRegistryUI();
+            updateBreakAreaUI();
+        }
+    }
+
+    function updateBreakAreaUI() {
+        const area = document.getElementById('break-area');
+        const breaking = state.staffOnSite.filter(p => p.onBreak);
+        area.innerHTML = breaking.map(p => {
+            const circumference = 2 * Math.PI * 20;
+            const offset = circumference - (p.energy / 100) * circumference;
+            return `
+                <div class="break-avatar" onclick="endBreak('${p.id}')">
+                    <div class="energy-ring">
+                        <svg class="energy-progress-svg" width="44" height="44">
+                            <circle cx="22" cy="22" r="20" fill="transparent" stroke="#22c55e" stroke-width="4" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" style="transition: stroke-dashoffset 0.5s ease;"/>
+                        </svg>
+                        <span class="text-lg">👤</span>
+                    </div>
+                    <span class="text-[8px] font-bold mt-1 text-slate-400">${p.name.split(' ')}</span>
+                </div>`;
+        }).join('');
+    }
+
+    function endBreak(id) {
+        const person = state.staffOnSite.find(p => p.id === id);
+        if (person) { person.onBreak = false; log(`${person.name} returning to duty.`); updateRegistryUI(); updateBreakAreaUI(); }
+    }
+
+    function spawnVisitor() {
+        if (state.pool.length === 0) {
+            checkSubStageTransition();
+            return;
+        }
+        
+        const data = state.pool.shift();
+        const container = document.getElementById('visitors-container');
+        container.innerHTML = '';
+        const visitor = document.createElement('div');
+        visitor.className = 'visitor';
+        visitor.innerHTML = '👤';
+        visitor.onclick = () => { createIDCard(data, visitor); setAlert("Visitor Arrived - Check Status"); };
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'speech-bubble';
+        bubble.innerText = data.msg;
+        
+        container.appendChild(bubble); 
+        container.appendChild(visitor);
+        state.activeVisitor = { el: visitor, bubble, data, givenPPE: [] };
+        state.isIdScanned = false;
+        resetSlider();
+    }
+
+    function checkSubStageTransition() {
+        const current = STAGES[state.currentStageKey];
+        const nextKey = current.next;
+        
+        if (nextKey && STAGES[nextKey].development) {
+            state.currentStageKey = nextKey;
+            const nextStage = STAGES[nextKey];
+            setAlert(nextStage.alertMsg, true);
+            log(nextStage.alertMsg, 'warn');
+            initializePool(nextStage);
+            setTimeout(spawnVisitor, 2000);
+        } else {
+            endGame();
+        }
+    }
+
+    function createIDCard(data, el) {
+        if (el.classList.contains('active')) return;
+        el.classList.add('active');
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.style.left = 'calc(50% - 50px)';
+        card.style.top = '12%';
+        const orgText = data.authorised ? data.org : "NOT REGISTERED";
+        const footerText = data.authorised ? "Heritage Authority" : "VISITOR PASS";
+        card.innerHTML = `
+            <div class="card-inner flipped" id="card-inner">
+                <div class="w-8 h-8 bg-slate-200 rounded mb-1"></div>
+                <b class="text-[9px] uppercase">${data.name}</b>
+                <span class="text-[7px] opacity-60">${orgText}</span>
+                <div class="mt-2 pt-1 border-t w-full text-[5px] text-center uppercase tracking-widest">${footerText}</div>
+            </div>`;
+        document.body.appendChild(card);
+        initDrag(card, 'ID');
+    }
+
+    function setupSupplyInteraction() {
+        document.querySelectorAll('.ppe-icon').forEach(icon => {
+            icon.onpointerdown = (e) => {
+                const type = icon.dataset.type;
+                if (state.resources[type] <= 0) { log(`Inventory empty: ${type.toUpperCase()}`, 'error'); return; }
+                if (state.resources[type] < 90) state.resources[type]--;
+                updateResUI();
+                const dragEl = document.createElement('div');
+                dragEl.className = 'ppe-drag';
+                dragEl.innerHTML = icon.querySelector('span').innerText;
+                dragEl.dataset.type = type;
+                dragEl.style.left = (e.clientX - 25) + 'px';
+                dragEl.style.top = (e.clientY - 25) + 'px';
+                document.body.appendChild(dragEl);
+                initDrag(dragEl, 'PPE');
+            };
+        });
+    }
+
+    function initDrag(el, type) {
+        let offsetX = 0, offsetY = 0, dragging = false;
+        el.onpointerdown = (e) => {
+            dragging = true;
+            const rect = el.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            el.setPointerCapture(e.pointerId);
+        };
+        el.onpointermove = (e) => {
+            if (!dragging) return;
+            el.style.left = (e.clientX - offsetX) + 'px';
+            el.style.top = (e.clientY - offsetY) + 'px';
+            if (type === 'ID') {
+                const inner = el.querySelector('#card-inner');
+                if (e.clientY > window.innerHeight * 0.45) inner.classList.remove('flipped');
+                else inner.classList.add('flipped');
+            }
+        };
+        el.onpointerup = (e) => {
+            dragging = false;
+            const slot = document.getElementById('id-slot');
+            const slotRect = slot.getBoundingClientRect();
+            const visitorRect = state.activeVisitor?.el.getBoundingClientRect();
+
+            if (type === 'ID' && slotRect) {
+                if (e.clientX > slotRect.left && e.clientX < slotRect.right && e.clientY > slotRect.top && e.clientY < slotRect.bottom) {
+                    state.isIdScanned = true;
+                    state.activeCard = el;
+                    slot.appendChild(el);
+                    el.classList.add('slotted-card');
+                    el.querySelector('#card-inner').classList.remove('flipped');
+                    document.getElementById('gate-track').style.borderColor = '#fbbf24';
+                    document.getElementById('knob-icon').innerText = '🔓';
+                    log(`ID Logged: ${state.activeVisitor.data.name}`);
+                    
+                    const req = state.activeVisitor.data.ppe || [];
+                    const ppeAlert = req.length > 0 ? `PPE REQUIRED: ${req.join(', ').toUpperCase()}` : "NO PPE REQUIRED";
+                    setAlert(`ID SCANNED - ${ppeAlert}`);
+                    return;
+                }
+            }
+
+            if (type === 'PPE' && visitorRect) {
+                if (e.clientX > visitorRect.left && e.clientX < visitorRect.right && e.clientY > visitorRect.top && e.clientY < visitorRect.bottom) {
+                    state.activeVisitor.givenPPE.push(el.dataset.type);
+                    log(`${el.dataset.type.toUpperCase()} issued to visitor.`);
+                    el.remove();
+                    return;
+                }
+            }
+        };
+    }
+
+    function setupSlider() {
+        const knob = document.getElementById('gate-knob');
+        const track = document.getElementById('gate-track');
+        let isDragging = false, startX, knobStartX;
+        knob.onpointerdown = (e) => {
+            if (!state.isIdScanned) { log("Slot ID first.", "warn"); return; }
+            isDragging = true; startX = e.clientX; knobStartX = knob.offsetLeft; knob.setPointerCapture(e.pointerId);
+        };
+        knob.onpointermove = (e) => {
+            if (!isDragging) return;
+            const delta = e.clientX - startX;
+            let newPos = knobStartX - delta; 
+            newPos = Math.max(5, Math.min(newPos, track.offsetWidth - 55));
+            knob.style.left = newPos + 'px'; knob.style.transform = 'none';
+        };
+        knob.onpointerup = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            if (knob.offsetLeft > track.offsetWidth - 70) finalize(true);
+            else if (knob.offsetLeft < 30) finalize(false);
+            else resetSlider();
+        };
+    }
+
+    function finalize(admitted) {
+        const v = state.activeVisitor;
+        state.stats.processed++;
+        v.bubble.style.opacity = '0';
+        if (admitted) {
+            log(`ADMITTED: ${v.data.name}`);
+            
+            // Check Authorisation
+            if (!v.data.authorised) { 
+                state.stats.safety++; 
+                log(`SECURITY BREACH: Unauthorized entry!`, 'error'); 
+            } else {
+                // ADD TO SITE LIST ONLY IF AUTHORISED
+                const exists = state.staffOnSite.find(s => s.id === v.data.id);
+                if (!exists) {
+                    state.staffOnSite.push({ ...v.data, admitted: true, onBreak: false });
+                    updateRegistryUI();
+                }
+                // Handle supply return top-up
+                if (v.data._supplyReturn && v.data.role === 'Support Team') {
+                    const supplyTypes = ['mask', 'gloves', 'vest'];
+                    const finite = supplyTypes.filter(t => state.resources[t] <= 90);
+                    if (finite.length > 0) {
+                        const lowestType = finite.reduce((a, b) => state.resources[a] <= state.resources[b] ? a : b);
+                        state.resources[lowestType] = Math.min(90, state.resources[lowestType] + 5);
+                        updateResUI();
+                        log(`${v.data.name} topped up ${lowestType.toUpperCase()} by 5.`);
+                    }
+                } else if (v.data._supplyReturn) {
+                    log(`${v.data.name} returned without supplies.`);
+                }
+            }
+            
+            // PPE Validation
+            const missing = (v.data.ppe || []).filter(p => !v.givenPPE.includes(p));
+            if (missing.length > 0) { 
+                state.stats.safety++; 
+                log(`SAFETY ALERT: PPE violation!`, 'error'); 
+            }
+
+            v.el.style.transform = 'translateY(-120px)';
+            setTimeout(() => { v.el.style.transform = 'translateY(-120px) translateX(300px)'; v.el.style.opacity = '0'; }, 600);
+        } else {
+            log(`DECLINED: ${v.data.name}`, 'warn');
+            if (!v.data.authorised) state.stats.unauthorizedDenied++;
+            v.el.style.transform = 'translateY(110px)';
+            setTimeout(() => { v.el.style.transform = 'translateY(110px) translateX(-300px)'; v.el.style.opacity = '0'; }, 600);
+        }
+
+        if (state.activeCard) {
+            state.activeCard.classList.add('slotted-exit');
+            const cardRef = state.activeCard;
+            setTimeout(() => cardRef.remove(), 1100); 
+            state.activeCard = null;
+        }
+        checkSuppliesReturns();
+        setAlert("Standby for Visitors");
+        setTimeout(spawnVisitor, 2000);
+    }
+
+    function updateResUI() {
+        ['mask', 'gloves', 'vest', 'walkie', 'clipboard', 'rubbish'].forEach(type => {
+            const el = document.getElementById(`res-${type}`);
+            if (el) el.innerText = state.resources[type] > 90 ? '∞' : state.resources[type];
+        });
+    }
+
+    function resetSlider() {
+        const knob = document.getElementById('gate-knob');
+        knob.style.left = '50%'; knob.style.transform = 'translateX(-50%)';
+        document.getElementById('gate-track').style.borderColor = '#334155';
+        document.getElementById('knob-icon').innerText = state.isIdScanned ? '🔓' : '🔒';
+    }
+
+    function endGame() {
+        if (state.timerInterval) clearInterval(state.timerInterval);
+        document.getElementById('game-interface').style.display = 'none';
+        document.getElementById('screen-summary').style.display = 'flex';
+        const isFinal = !STAGES[state.currentStageKey].next;
+        document.getElementById('btn-next-shift').innerText = isFinal ? "ALL SHIFTS COMPLETE" : "NEXT SHIFT";
+        document.getElementById('summary-stats').innerHTML = `
+            <p class="text-white font-bold">Shift: ${STAGES[state.currentStageKey].title || 'Continuous Shift'}</p>
+            <p>Registration Accuracy: ${state.stats.unauthorizedDenied > 0 ? '100%' : 'Needs Improvement'}</p>
+            <p>Safety Deviations: ${state.stats.safety}</p>`;
+    }
+
+    function nextStageFromSummary() {
+        const next = STAGES[state.currentStageKey].next;
+        if (next) showStageIntro(next);
+        else location.reload();
+    }
+
+    window.onload = () => document.getElementById('screen-title').style.display = 'flex';
+</script>
+</body>
+</html>
+
+
