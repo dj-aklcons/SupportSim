@@ -648,7 +648,7 @@
     let state = {
         currentStageKey: '1',
         resources: {},
-        stats: { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0 },
+        stats: { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0, ppeViolations: 0, authorisedAdmitted: 0 },
         isIdScanned: false,
         activeVisitor: null,
         activeCard: null,
@@ -713,7 +713,7 @@
     function startStage() {
         const s = STAGES[state.currentStageKey];
         if (s.resources) state.resources = { ...s.resources };
-        state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0 };
+        state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0, ppeViolations: 0, authorisedAdmitted: 0 };
         state.suppliesQueue = [];
         
         initializePool(s);
@@ -725,6 +725,7 @@
         
         const [h, m] = s.startTime.split(':').map(Number);
         state.gameTimeMinutes = h * 60 + m;
+        state.shiftStartMinutes = state.gameTimeMinutes;
         document.getElementById('current-time-display').innerText = formatGameTime(state.gameTimeMinutes);
         
         if (state.timerInterval) clearInterval(state.timerInterval);
@@ -1114,6 +1115,7 @@
                     state.staffOnSite.push({ ...v.data, admitted: true, onBreak: false });
                     updateRegistryUI();
                 }
+                state.stats.authorisedAdmitted++;
                 // Handle supply return top-up
                 if (v.data._supplyReturn) {
                     const item = v.data._supplyItem;
@@ -1129,9 +1131,10 @@
             
             // PPE Validation
             const missing = (v.data.ppe || []).filter(p => !v.givenPPE.includes(p));
-            if (missing.length > 0) { 
-                state.stats.safety++; 
-                log(`SAFETY ALERT: PPE violation!`, 'error'); 
+            if (missing.length > 0) {
+                state.stats.safety++;
+                state.stats.ppeViolations++;
+                log(`SAFETY ALERT: PPE violation!`, 'error');
             }
 
             v.el.style.transform = 'translateY(-120px)';
@@ -1170,14 +1173,64 @@
 
     function endGame() {
         if (state.timerInterval) clearInterval(state.timerInterval);
+
+        // --- Registration Accuracy ---
+        const totalUnauth = state.stats.securityBreaches + state.stats.unauthorizedDenied;
+        const regPct = totalUnauth === 0 ? 100 : Math.round(state.stats.unauthorizedDenied / totalUnauth * 100);
+        const regNote = totalUnauth === 0 ? 'No unauthorised visitors processed'
+            : `${state.stats.unauthorizedDenied} of ${totalUnauth} unauthorised visitor${totalUnauth !== 1 ? 's' : ''} correctly denied`;
+
+        // --- Safety Compliance ---
+        const safeAdmissions = state.stats.authorisedAdmitted - state.stats.ppeViolations;
+        const safePct = state.stats.authorisedAdmitted === 0 ? 100
+            : Math.round(safeAdmissions / state.stats.authorisedAdmitted * 100);
+        const safeNote = state.stats.authorisedAdmitted === 0 ? 'No authorised admissions recorded'
+            : `${safeAdmissions} of ${state.stats.authorisedAdmitted} admission${state.stats.authorisedAdmitted !== 1 ? 's' : ''} PPE compliant`;
+
+        // --- Operational Efficiency ---
+        const hsBreaches = state.staffOnSite.filter(p => p.exitedOverwork).length;
+        const totalMistakes = state.stats.securityBreaches + state.stats.ppeViolations + hsBreaches;
+        const elapsedMins = Math.max(1, state.gameTimeMinutes - state.shiftStartMinutes);
+        const effRate = (totalMistakes / elapsedMins) * 100;
+        const effLabel = totalMistakes === 0 ? 'Excellent' : effRate < 5 ? 'Good' : effRate < 15 ? 'Fair' : 'Needs Improvement';
+        const effNote = totalMistakes === 0 ? `No errors over ${elapsedMins} minute${elapsedMins !== 1 ? 's' : ''}`
+            : `${totalMistakes} error${totalMistakes !== 1 ? 's' : ''} over ${elapsedMins} minute${elapsedMins !== 1 ? 's' : ''}`;
+
+        // --- Staff Wellness ---
+        const wellnessStaff = state.staffOnSite.filter(p => p.breakRequired);
+        const avgEnergy = wellnessStaff.length === 0 ? null
+            : Math.round(wellnessStaff.reduce((sum, p) => sum + p.energy, 0) / wellnessStaff.length);
+        const wellnessLabel = avgEnergy === null ? 'N/A' : avgEnergy >= 70 ? 'Good' : avgEnergy >= 40 ? 'Fair' : 'Poor';
+        const wellnessNote = avgEnergy === null ? 'No break-required staff this shift'
+            : avgEnergy >= 70 ? 'Break rotations managed well'
+            : avgEnergy >= 40 ? 'Some staff ran low on energy'
+            : 'Staff welfare was poorly managed';
+
+        const metricColor = pct => pct >= 80 ? '#22c55e' : pct >= 50 ? '#fbbf24' : '#ef4444';
+        const labelColor = label => label === 'Excellent' || label === 'Good' ? '#22c55e'
+            : label === 'Fair' ? '#fbbf24' : '#ef4444';
+
+        const metric = (title, value, valueColor, note, border) => `
+            <div style="border-left:3px solid ${border};padding-left:10px;">
+                <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#64748b;text-transform:uppercase;">${title}</div>
+                <div style="font-size:22px;font-weight:900;color:${valueColor};line-height:1.2;">${value}</div>
+                <div style="font-size:10px;color:#94a3b8;margin-top:1px;">${note}</div>
+            </div>`;
+
         document.getElementById('game-interface').style.display = 'none';
         document.getElementById('screen-summary').style.display = 'flex';
         const isFinal = !STAGES[state.currentStageKey].next;
         document.getElementById('btn-next-shift').innerText = isFinal ? "ALL SHIFTS COMPLETE" : "NEXT SHIFT";
         document.getElementById('summary-stats').innerHTML = `
-            <p class="text-white font-bold">Shift: ${STAGES[state.currentStageKey].title || 'Continuous Shift'}</p>
-            <p>Registration Accuracy: ${state.stats.securityBreaches === 0 ? '100%' : 'Needs Improvement'}</p>
-            <p>Safety Deviations: ${state.stats.safety}</p>`;
+            <p style="font-size:11px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
+                ${STAGES[state.currentStageKey].title || 'Shift'}</p>
+            ${metric('Registration Accuracy', regPct + '%', metricColor(regPct), regNote, metricColor(regPct))}
+            ${metric('Safety Compliance', safePct + '%', metricColor(safePct), safeNote, metricColor(safePct))}
+            ${metric('Operational Efficiency', effLabel, labelColor(effLabel), effNote, labelColor(effLabel))}
+            ${metric('Staff Wellness', avgEnergy === null ? 'N/A' : wellnessLabel, labelColor(wellnessLabel), wellnessNote, labelColor(wellnessLabel))}
+            <div style="margin-top:8px;padding:10px 12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:6px;font-size:10px;color:#93c5fd;font-style:italic;line-height:1.5;">
+                High energy levels correlate to faster movement and processing. Ensure breaks are given before team members run out of energy.
+            </div>`;
     }
 
     function nextStageFromSummary() {
