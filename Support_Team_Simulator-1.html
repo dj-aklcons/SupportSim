@@ -458,7 +458,7 @@
     </div>
 
     <div id="neutral-zone">
-        <div id="transfer-slot">AIRLOCK TRANSFER SLOT</div>
+        <div id="transfer-slot">SUPPORT TEAM REGISTRATION DESK</div>
     </div>
 
     <div id="office-side" class="flex gap-3">
@@ -610,7 +610,7 @@
     let state = {
         currentStageKey: '1',
         resources: {},
-        stats: { processed: 0, safety: 0, unauthorizedDenied: 0 },
+        stats: { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0 },
         isIdScanned: false,
         activeVisitor: null,
         activeCard: null,
@@ -675,7 +675,7 @@
     function startStage() {
         const s = STAGES[state.currentStageKey];
         if (s.resources) state.resources = { ...s.resources };
-        state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0 };
+        state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0 };
         state.suppliesQueue = [];
         
         initializePool(s);
@@ -854,7 +854,7 @@
                         </svg>
                         <span class="text-lg">👤</span>
                     </div>
-                    <span class="text-[8px] font-bold mt-1 text-slate-400">${p.name.split(' ')}</span>
+                    <span class="text-[8px] font-bold mt-1 text-slate-400">${p.name.split(' ')[0]}</span>
                 </div>`;
         }).join('');
     }
@@ -1030,9 +1030,10 @@
             log(`ADMITTED: ${v.data.name}`);
             
             // Check Authorisation
-            if (!v.data.authorised) { 
-                state.stats.safety++; 
-                log(`SECURITY BREACH: Unauthorized entry!`, 'error'); 
+            if (!v.data.authorised) {
+                state.stats.safety++;
+                state.stats.securityBreaches++;
+                log(`SECURITY BREACH: Unauthorized entry!`, 'error');
             } else {
                 // ADD TO SITE LIST ONLY IF AUTHORISED
                 const exists = state.staffOnSite.find(s => s.id === v.data.id);
@@ -1104,7 +1105,7 @@
         document.getElementById('btn-next-shift').innerText = isFinal ? "ALL SHIFTS COMPLETE" : "NEXT SHIFT";
         document.getElementById('summary-stats').innerHTML = `
             <p class="text-white font-bold">Shift: ${STAGES[state.currentStageKey].title || 'Continuous Shift'}</p>
-            <p>Registration Accuracy: ${state.stats.unauthorizedDenied > 0 ? '100%' : 'Needs Improvement'}</p>
+            <p>Registration Accuracy: ${state.stats.securityBreaches === 0 ? '100%' : 'Needs Improvement'}</p>
             <p>Safety Deviations: ${state.stats.safety}</p>`;
     }
 
