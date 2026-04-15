@@ -475,10 +475,13 @@
     <button class="btn-primary" onclick="startStage()">DEPLOY TO SITE</button>
 </div>
 
-<div id="screen-summary" class="overlay-screen" style="display: none;">
-    <h2 class="text-3xl font-black text-white mb-2 uppercase">Shift Summary</h2>
-    <div id="summary-stats" class="w-full max-w-xs space-y-3 mb-8 text-left bg-gray-900 p-6 rounded-xl border border-gray-800"></div>
-    <button class="btn-primary" id="btn-next-shift" onclick="nextStageFromSummary()">NEXT SHIFT</button>
+<div id="screen-summary" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
+    <div id="summary-p1" style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px;overflow:hidden;">
+        <div id="summary-content-p1" style="width:100%;max-width:360px;"></div>
+    </div>
+    <div id="summary-p2" style="height:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px;overflow:hidden;">
+        <div id="summary-content-p2" style="width:100%;max-width:360px;"></div>
+    </div>
 </div>
 
 <div id="game-interface">
@@ -1206,31 +1209,41 @@
             : avgEnergy >= 40 ? 'Some staff ran low on energy'
             : 'Staff welfare was poorly managed';
 
-        const metricColor = pct => pct >= 80 ? '#22c55e' : pct >= 50 ? '#fbbf24' : '#ef4444';
-        const labelColor = label => label === 'Excellent' || label === 'Good' ? '#22c55e'
-            : label === 'Fair' ? '#fbbf24' : '#ef4444';
+        const pctColor  = pct   => pct   >= 80 ? '#22c55e' : pct   >= 50 ? '#fbbf24' : '#ef4444';
+        const labelColor = label => label === 'Excellent' || label === 'Good' ? '#22c55e' : label === 'Fair' ? '#fbbf24' : '#ef4444';
 
-        const metric = (title, value, valueColor, note, border) => `
-            <div style="border-left:3px solid ${border};padding-left:10px;">
-                <div style="font-size:9px;font-weight:900;letter-spacing:1px;color:#64748b;text-transform:uppercase;">${title}</div>
-                <div style="font-size:22px;font-weight:900;color:${valueColor};line-height:1.2;">${value}</div>
-                <div style="font-size:10px;color:#94a3b8;margin-top:1px;">${note}</div>
+        const row = (label, value, valueColor, note) => `
+            <div style="padding:3px 0;border-bottom:1px solid #1e293b;">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
+                    <span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;white-space:nowrap;">${label}</span>
+                    <span style="font-size:13px;font-weight:900;color:${valueColor};white-space:nowrap;">${value}</span>
+                </div>
+                <div style="font-size:8px;color:#94a3b8;margin-top:1px;">${note}</div>
+            </div>`;
+
+        const isFinal = !STAGES[state.currentStageKey].next;
+        const btnLabel = isFinal ? 'ALL SHIFTS COMPLETE' : 'NEXT SHIFT';
+
+        const summaryHTML = `
+            <p style="font-size:9px;font-weight:900;letter-spacing:2px;color:#64748b;text-transform:uppercase;margin-bottom:5px;text-align:center;">
+                Shift Summary — ${STAGES[state.currentStageKey].title || 'Shift'}</p>
+            <div style="margin-bottom:5px;">
+                ${row('Registration Accuracy', regPct + '%',                          pctColor(regPct),          regNote)}
+                ${row('Safety Compliance',     safePct + '%',                         pctColor(safePct),         safeNote)}
+                ${row('Operational Efficiency',effLabel,                              labelColor(effLabel),      effNote)}
+                ${row('Staff Wellness',        avgEnergy === null ? 'N/A' : wellnessLabel, labelColor(wellnessLabel), wellnessNote)}
+            </div>
+            <div style="font-size:8px;color:#93c5fd;font-style:italic;padding:5px 8px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:4px;line-height:1.4;margin-bottom:7px;">
+                High energy levels correlate to faster movement and processing. Ensure breaks are given before team members run out of energy.
+            </div>
+            <div style="text-align:center;">
+                <button onclick="nextStageFromSummary()" style="background:#3b82f6;color:white;padding:7px 20px;border-radius:99px;font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:1px;border:none;cursor:pointer;">${btnLabel}</button>
             </div>`;
 
         document.getElementById('game-interface').style.display = 'none';
         document.getElementById('screen-summary').style.display = 'flex';
-        const isFinal = !STAGES[state.currentStageKey].next;
-        document.getElementById('btn-next-shift').innerText = isFinal ? "ALL SHIFTS COMPLETE" : "NEXT SHIFT";
-        document.getElementById('summary-stats').innerHTML = `
-            <p style="font-size:11px;font-weight:900;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
-                ${STAGES[state.currentStageKey].title || 'Shift'}</p>
-            ${metric('Registration Accuracy', regPct + '%', metricColor(regPct), regNote, metricColor(regPct))}
-            ${metric('Safety Compliance', safePct + '%', metricColor(safePct), safeNote, metricColor(safePct))}
-            ${metric('Operational Efficiency', effLabel, labelColor(effLabel), effNote, labelColor(effLabel))}
-            ${metric('Staff Wellness', avgEnergy === null ? 'N/A' : wellnessLabel, labelColor(wellnessLabel), wellnessNote, labelColor(wellnessLabel))}
-            <div style="margin-top:8px;padding:10px 12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:6px;font-size:10px;color:#93c5fd;font-style:italic;line-height:1.5;">
-                High energy levels correlate to faster movement and processing. Ensure breaks are given before team members run out of energy.
-            </div>`;
+        document.getElementById('summary-content-p1').innerHTML = summaryHTML;
+        document.getElementById('summary-content-p2').innerHTML = summaryHTML;
     }
 
     function nextStageFromSummary() {
