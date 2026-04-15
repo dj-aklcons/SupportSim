@@ -379,6 +379,25 @@
             pointer-events: none;
             background: rgba(15, 23, 42, 0.6);
         }
+        .registry-row.on-supply-run {
+            opacity: 0.5;
+            filter: grayscale(0.6);
+            border-left-color: #f97316;
+        }
+        .supply-run-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #f97316;
+            text-transform: uppercase;
+            pointer-events: none;
+            background: rgba(15, 23, 42, 0.5);
+        }
         .energy-bar-container {
             position: absolute;
             bottom: 0;
@@ -756,7 +775,7 @@
 
     function checkCriticalAlert() {
         const critical = state.staffOnSite.filter(
-            p => p.breakRequired && !p.onBreak && !p.exitedOverwork && p.energy <= 20 && p.energy > 0
+            p => p.breakRequired && !p.onBreak && !p.onSupplyRun && !p.exitedOverwork && p.energy <= 20 && p.energy > 0
         );
         if (critical.length > 0) {
             setAlert(`ENERGY CRITICAL: ${critical.map(p => p.name.split(' ')[0]).join(', ')}`, true);
@@ -776,8 +795,8 @@
         }
 
         list.innerHTML = visibleOnSite.map(p => {
-            const rowClass = p.exitedOverwork ? 'exited' : (p.onBreak ? 'on-break' : '');
-            const disableControls = p.exitedOverwork ? 'disabled' : '';
+            const rowClass = p.exitedOverwork ? 'exited' : p.onSupplyRun ? 'on-supply-run' : (p.onBreak ? 'on-break' : '');
+            const lockAll = p.exitedOverwork || p.onSupplyRun ? 'disabled' : '';
             return `
             <div class="registry-row ${rowClass}" id="reg-${p.id}">
                 <div class="flex items-center justify-between">
@@ -786,14 +805,15 @@
                         <span class="opacity-50 text-[7px] uppercase">${p.role}</span>
                     </div>
                     <div class="flex items-center gap-6 px-3">
-                        <input type="checkbox" class="registry-check" ${p.exitedOverwork ? '' : 'checked'} ${disableControls} onchange="toggleOnsite('${p.id}', this.checked)">
-                        <input type="checkbox" class="registry-check" ${p.onBreak ? 'checked' : ''} ${p.onBreak || p.exitedOverwork ? 'disabled' : ''} onchange="toggleBreak('${p.id}', this.checked)">
+                        <input type="checkbox" class="registry-check" ${p.exitedOverwork ? '' : 'checked'} ${lockAll} onchange="toggleOnsite('${p.id}', this.checked)">
+                        <input type="checkbox" class="registry-check" ${p.onBreak ? 'checked' : ''} ${p.onBreak || lockAll ? 'disabled' : ''} onchange="toggleBreak('${p.id}', this.checked)">
                     </div>
                 </div>
                 <div class="energy-bar-container">
                     <div class="energy-bar" style="width: ${p.energy}%; background: ${getEnergyColor(p.energy)};"></div>
                 </div>
                 ${p.exitedOverwork ? '<div class="exited-overlay">Exited site due to overwork</div>' : ''}
+                ${p.onSupplyRun ? `<div class="supply-run-overlay">Supply Run — returning ${p.supplyItem ? p.supplyItem.toUpperCase() : ''}</div>` : ''}
             </div>`;
         }).join('');
     }
@@ -801,8 +821,7 @@
     function toggleOnsite(id, isChecked) {
         if (!isChecked) {
             const person = state.staffOnSite.find(p => p.id === id);
-            if (!person) return;
-            // Re-check the checkbox visually while we wait for user input
+            if (!person || person.exitedOverwork || person.onSupplyRun) return;
             const checkbox = document.querySelector(`#reg-${id} .registry-check`);
             if (checkbox) checkbox.checked = true;
             showSuppliesPopup(person);
@@ -810,65 +829,79 @@
     }
 
     function showSuppliesPopup(person) {
-        // Remove any existing popup
         const existing = document.getElementById('supplies-popup');
         if (existing) existing.remove();
 
         const overlay = document.createElement('div');
         overlay.id = 'supplies-popup';
-        overlay.style.cssText = `
-            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-            z-index: 20000; display: flex; align-items: center; justify-content: center;
-        `;
+        overlay.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:20000;display:flex;align-items:center;justify-content:center;`;
 
         const box = document.createElement('div');
-        box.style.cssText = `
-            background: #1e293b; border: 2px solid #475569; border-radius: 12px;
-            padding: 28px 32px; text-align: center; max-width: 300px; width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-        `;
-        box.innerHTML = `
-            <p style="color:#e2e8f0; font-size:14px; font-weight:700; margin-bottom:20px; line-height:1.5;">
-                Send <span style="color:#fbbf24;">${person.name}</span> for supplies?
-            </p>
-            <div style="display:flex; gap:12px; justify-content:center;">
-                <button id="supplies-yes" style="background:#22c55e; color:white; padding:10px 28px; border-radius:99px; font-weight:800; font-size:13px; letter-spacing:1px; border:none; cursor:pointer;">YES</button>
-                <button id="supplies-no" style="background:#ef4444; color:white; padding:10px 28px; border-radius:99px; font-weight:800; font-size:13px; letter-spacing:1px; border:none; cursor:pointer;">NO</button>
-            </div>
-        `;
-        overlay.appendChild(box);
-        document.body.appendChild(overlay);
+        box.style.cssText = `background:#1e293b;border:2px solid #475569;border-radius:12px;padding:24px 28px;text-align:center;max-width:300px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.6);`;
 
-        document.getElementById('supplies-yes').onclick = () => {
-            overlay.remove();
-            sendForSupplies(person);
-        };
-        document.getElementById('supplies-no').onclick = () => {
-            overlay.remove();
-            log(`${person.name} remains on-site.`);
-            // Leave them in staffOnSite, checkbox stays ticked
-        };
+        if (person.role === 'Support Team') {
+            const items = [
+                { type: 'mask',   emoji: '😷', label: 'Mask'   },
+                { type: 'gloves', emoji: '🧤', label: 'Gloves' },
+                { type: 'vest',   emoji: '🦺', label: 'Vest'   },
+            ];
+            box.innerHTML = `
+                <p style="color:#e2e8f0;font-size:13px;font-weight:700;margin-bottom:6px;line-height:1.5;">
+                    Send <span style="color:#fbbf24;">${person.name}</span> for supplies?
+                </p>
+                <p style="color:#94a3b8;font-size:10px;margin-bottom:14px;">Select item to restock:</p>
+                <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px;">
+                    ${items.map(i => `
+                        <button class="supply-item-btn" data-item="${i.type}"
+                            style="background:#0f172a;border:2px solid #334155;border-radius:8px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:68px;">
+                            <span style="font-size:22px;">${i.emoji}</span>
+                            <span style="color:#e2e8f0;font-size:9px;font-weight:700;">${i.label}</span>
+                            <span style="color:#64748b;font-size:9px;">${state.resources[i.type]} left</span>
+                        </button>`).join('')}
+                </div>
+                <button id="supplies-cancel" style="background:transparent;color:#64748b;padding:6px 20px;border-radius:99px;font-weight:700;font-size:11px;border:1px solid #334155;cursor:pointer;">CANCEL</button>`;
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            overlay.querySelectorAll('.supply-item-btn').forEach(btn => {
+                btn.onclick = () => { overlay.remove(); sendForSupplies(person, btn.dataset.item); };
+            });
+            document.getElementById('supplies-cancel').onclick = () => { overlay.remove(); log(`${person.name} remains on-site.`); };
+        } else {
+            box.innerHTML = `
+                <p style="color:#e2e8f0;font-size:14px;font-weight:700;margin-bottom:8px;line-height:1.5;">
+                    Send <span style="color:#fbbf24;">${person.name}</span> off-site?
+                </p>
+                <p style="color:#94a3b8;font-size:10px;margin-bottom:18px;">They may not be able to source supplies.</p>
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <button id="supplies-yes" style="background:#22c55e;color:white;padding:10px 28px;border-radius:99px;font-weight:800;font-size:13px;letter-spacing:1px;border:none;cursor:pointer;">YES</button>
+                    <button id="supplies-no" style="background:#ef4444;color:white;padding:10px 28px;border-radius:99px;font-weight:800;font-size:13px;letter-spacing:1px;border:none;cursor:pointer;">NO</button>
+                </div>`;
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            document.getElementById('supplies-yes').onclick = () => { overlay.remove(); sendForSupplies(person, null); };
+            document.getElementById('supplies-no').onclick = () => { overlay.remove(); log(`${person.name} remains on-site.`); };
+        }
     }
 
-    function sendForSupplies(person) {
-        // Remove from on-site list
-        state.staffOnSite = state.staffOnSite.filter(p => p.id !== person.id);
-        log(`${person.name} sent for supplies.`);
+    function sendForSupplies(person, item) {
+        const existing = state.staffOnSite.find(p => p.id === person.id);
+        if (existing) { existing.onSupplyRun = true; existing.supplyItem = item; }
+        const itemLabel = item ? ` (${item.toUpperCase()})` : '';
+        log(`${person.name} sent for supplies${itemLabel}.`);
         updateRegistryUI();
-        // Queue to return after 2 more people are processed
-        state.suppliesQueue.push({ person, returnAfter: state.stats.processed + 2 });
+        state.suppliesQueue.push({ person, item, returnAfter: state.stats.processed + 2 });
     }
 
     function checkSuppliesReturns() {
         const returning = state.suppliesQueue.filter(q => state.stats.processed >= q.returnAfter);
         state.suppliesQueue = state.suppliesQueue.filter(q => state.stats.processed < q.returnAfter);
-        returning.forEach(q => admitReturningSupplier(q.person));
+        returning.forEach(q => admitReturningSupplier(q.person, q.item));
     }
 
-    function admitReturningSupplier(person) {
+    function admitReturningSupplier(person, item) {
         const isSupport = person.role === 'Support Team';
-        const returnMsg = isSupport ? 'I have more supplies!' : "I didn't know how to get supplies!";
-        state.pool.unshift({ ...person, msg: returnMsg, _supplyReturn: true, admitted: false });
+        const returnMsg = isSupport ? 'I have more supplies!' : "I couldn't source any supplies.";
+        state.pool.unshift({ ...person, msg: returnMsg, _supplyReturn: true, _supplyItem: item, admitted: false });
         log(`${person.name} is returning — queued next.`);
     }
 
@@ -885,7 +918,7 @@
 
     function updateBreakAreaUI() {
         const area = document.getElementById('break-area');
-        const breaking = state.staffOnSite.filter(p => p.onBreak && !p.exitedOverwork);
+        const breaking = state.staffOnSite.filter(p => p.onBreak && !p.exitedOverwork && !p.onSupplyRun);
         area.innerHTML = breaking.map(p => {
             const circumference = 2 * Math.PI * 20;
             const offset = circumference - (p.energy / 100) * circumference;
@@ -1080,19 +1113,21 @@
             } else {
                 // ADD TO SITE LIST ONLY IF AUTHORISED
                 const exists = state.staffOnSite.find(s => s.id === v.data.id);
-                if (!exists) {
+                if (exists && exists.onSupplyRun) {
+                    exists.onSupplyRun = false;
+                    exists.supplyItem = null;
+                    updateRegistryUI();
+                } else if (!exists) {
                     state.staffOnSite.push({ ...v.data, admitted: true, onBreak: false });
                     updateRegistryUI();
                 }
                 // Handle supply return top-up
-                if (v.data._supplyReturn && v.data.role === 'Support Team') {
-                    const supplyTypes = ['mask', 'gloves', 'vest'];
-                    const finite = supplyTypes.filter(t => state.resources[t] <= 90);
-                    if (finite.length > 0) {
-                        const lowestType = finite.reduce((a, b) => state.resources[a] <= state.resources[b] ? a : b);
-                        state.resources[lowestType] = Math.min(90, state.resources[lowestType] + 5);
+                if (v.data._supplyReturn && v.data.role === 'Support Team' && v.data._supplyItem) {
+                    const item = v.data._supplyItem;
+                    if (state.resources[item] <= 90) {
+                        state.resources[item] = Math.min(90, state.resources[item] + 5);
                         updateResUI();
-                        log(`${v.data.name} topped up ${lowestType.toUpperCase()} by 5.`);
+                        log(`${v.data.name} restocked ${item.toUpperCase()} (+5).`);
                     }
                 } else if (v.data._supplyReturn) {
                     log(`${v.data.name} returned without supplies.`);
