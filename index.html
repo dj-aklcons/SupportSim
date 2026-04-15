@@ -360,6 +360,25 @@
             opacity: 0.5;
             filter: grayscale(1);
         }
+        .registry-row.exited {
+            opacity: 0.4;
+            filter: grayscale(1);
+            border-left-color: #ef4444;
+        }
+        .exited-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #ef4444;
+            text-transform: uppercase;
+            pointer-events: none;
+            background: rgba(15, 23, 42, 0.6);
+        }
         .energy-bar-container {
             position: absolute;
             bottom: 0;
@@ -694,10 +713,24 @@
             state.gameTimeMinutes += 1;
             document.getElementById('current-time-display').innerText = formatGameTime(state.gameTimeMinutes);
             state.staffOnSite.forEach(p => {
-                if (!p.breakRequired) return;
-                if (p.onBreak) p.energy = Math.min(100, p.energy + 10);
-                else p.energy = Math.max(0, p.energy - 3);
+                if (!p.breakRequired || p.exitedOverwork) return;
+                if (p.onBreak) {
+                    p.energy = Math.min(100, p.energy + 10);
+                } else {
+                    p.energy = Math.max(0, p.energy - 3);
+                    if (p.energy === 0) {
+                        p.exitedOverwork = true;
+                        state.stats.safety++;
+                        log(`H&S BREACH: ${p.name} exited due to overwork.`, 'error');
+                    }
+                }
             });
+            const critical = state.staffOnSite.filter(
+                p => p.breakRequired && !p.onBreak && !p.exitedOverwork && p.energy <= 20 && p.energy > 0
+            );
+            if (critical.length > 0) {
+                setAlert(`ENERGY CRITICAL: ${critical.map(p => p.name.split(' ')[0]).join(', ')}`, true);
+            }
             updateRegistryUI();
             updateBreakAreaUI();
         }, 10000);
@@ -737,21 +770,24 @@
         }
 
         list.innerHTML = visibleOnSite.map(p => {
+            const rowClass = p.exitedOverwork ? 'exited' : (p.onBreak ? 'on-break' : '');
+            const disableControls = p.exitedOverwork ? 'disabled' : '';
             return `
-            <div class="registry-row ${p.onBreak ? 'on-break' : ''}" id="reg-${p.id}">
+            <div class="registry-row ${rowClass}" id="reg-${p.id}">
                 <div class="flex items-center justify-between">
                     <div class="flex-grow">
                         <b class="text-white">${p.name}</b><br/>
                         <span class="opacity-50 text-[7px] uppercase">${p.role}</span>
                     </div>
                     <div class="flex items-center gap-6 px-3">
-                        <input type="checkbox" class="registry-check" checked onchange="toggleOnsite('${p.id}', this.checked)">
-                        <input type="checkbox" class="registry-check" ${p.onBreak ? 'checked disabled' : ''} onchange="toggleBreak('${p.id}', this.checked)">
+                        <input type="checkbox" class="registry-check" ${p.exitedOverwork ? '' : 'checked'} ${disableControls} onchange="toggleOnsite('${p.id}', this.checked)">
+                        <input type="checkbox" class="registry-check" ${p.onBreak ? 'checked' : ''} ${p.onBreak || p.exitedOverwork ? 'disabled' : ''} onchange="toggleBreak('${p.id}', this.checked)">
                     </div>
                 </div>
                 <div class="energy-bar-container">
                     <div class="energy-bar" style="width: ${p.energy}%; background: ${getEnergyColor(p.energy)};"></div>
                 </div>
+                ${p.exitedOverwork ? '<div class="exited-overlay">Exited site due to overwork</div>' : ''}
             </div>`;
         }).join('');
     }
@@ -842,7 +878,7 @@
 
     function updateBreakAreaUI() {
         const area = document.getElementById('break-area');
-        const breaking = state.staffOnSite.filter(p => p.onBreak);
+        const breaking = state.staffOnSite.filter(p => p.onBreak && !p.exitedOverwork);
         area.innerHTML = breaking.map(p => {
             const circumference = 2 * Math.PI * 20;
             const offset = circumference - (p.energy / 100) * circumference;
