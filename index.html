@@ -725,12 +725,7 @@
                     }
                 }
             });
-            const critical = state.staffOnSite.filter(
-                p => p.breakRequired && !p.onBreak && !p.exitedOverwork && p.energy <= 20 && p.energy > 0
-            );
-            if (critical.length > 0) {
-                setAlert(`ENERGY CRITICAL: ${critical.map(p => p.name.split(' ')[0]).join(', ')}`, true);
-            }
+            checkCriticalAlert();
             updateRegistryUI();
             updateBreakAreaUI();
         }, 10000);
@@ -757,6 +752,17 @@
         });
 
         state.pool = shuffle([...rawPool]);
+    }
+
+    function checkCriticalAlert() {
+        const critical = state.staffOnSite.filter(
+            p => p.breakRequired && !p.onBreak && !p.exitedOverwork && p.energy <= 20 && p.energy > 0
+        );
+        if (critical.length > 0) {
+            setAlert(`ENERGY CRITICAL: ${critical.map(p => p.name.split(' ')[0]).join(', ')}`, true);
+        } else {
+            document.getElementById('event-alert-box').classList.remove('alert-flash-red');
+        }
     }
 
     function updateRegistryUI() {
@@ -873,6 +879,7 @@
             log(`${person.name} is now on break.`);
             updateRegistryUI();
             updateBreakAreaUI();
+            checkCriticalAlert();
         }
     }
 
@@ -897,7 +904,7 @@
 
     function endBreak(id) {
         const person = state.staffOnSite.find(p => p.id === id);
-        if (person) { person.onBreak = false; log(`${person.name} returning to duty.`); updateRegistryUI(); updateBreakAreaUI(); }
+        if (person) { person.onBreak = false; log(`${person.name} returning to duty.`); updateRegistryUI(); updateBreakAreaUI(); checkCriticalAlert(); }
     }
 
     function spawnVisitor() {
