@@ -496,6 +496,15 @@
     </div>
 </div>
 
+<div id="screen-tutorial" style="display:none;position:fixed;inset:0;z-index:9000;flex-direction:column;">
+    <div id="tutorial-p1" style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;align-items:center;justify-content:center;padding:12px 16px;background:#0f172a;">
+        <div id="tutorial-content-p1" style="width:100%;max-width:340px;"></div>
+    </div>
+    <div id="tutorial-p2" style="height:50%;display:flex;align-items:center;justify-content:center;padding:12px 16px;background:#0f172a;">
+        <div id="tutorial-content-p2" style="width:100%;max-width:340px;"></div>
+    </div>
+</div>
+
 <div id="screen-summary" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
     <div id="summary-p1" style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px;overflow:hidden;">
         <div id="summary-content-p1" style="width:100%;max-width:360px;"></div>
@@ -675,6 +684,39 @@
         }
     };
 
+    const TUTORIALS = {
+        '1': {
+            p1: {
+                role: 'Disaster Support Team Member',
+                msg: 'Tap a visitor to retrieve their ID and give it to the Registration Desk. Make sure they get the supplies they need, and let the desk know if they shouldn\'t be on site! Once ready, you can slide the lock to admit or deny access.'
+            },
+            p2: {
+                role: 'Support Registration Desk',
+                msg: 'Place IDs in the visitor slot so your workmate knows who they are. Ask which supplies they need and pass them across.'
+            }
+        },
+        '2': {
+            p1: {
+                role: null,
+                msg: 'Keep processing visitors and keep an eye on the message box!'
+            },
+            p2: {
+                role: null,
+                msg: 'Keep registering workers on the site. If you are low on supplies, uncheck the ONSITE box to send someone on a supply run. Remember, only Support Team members can do this work!'
+            }
+        },
+        '3': {
+            p1: {
+                role: null,
+                msg: 'Great job! You\'re in charge of team members taking a break. Once they\'ve had a rest, tap them to send them back into the field!'
+            },
+            p2: {
+                role: null,
+                msg: 'Good work! Keep an eye on team member\'s energy levels and make sure they get a break if needed!'
+            }
+        }
+    };
+
     let state = {
         currentStageKey: '1',
         resources: {},
@@ -686,7 +728,9 @@
         timerInterval: null,
         staffOnSite: [], // ONLY those admitted and authorised
         pool: [],
-        suppliesQueue: [] // { person, returnAfter (processedCount) }
+        suppliesQueue: [],
+        tutorialP1Done: false,
+        tutorialP2Done: false
     };
 
     function setAlert(text, isCritical = false) {
@@ -756,19 +800,76 @@
         if (s.resources) state.resources = { ...s.resources };
         state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0, ppeViolations: 0, authorisedAdmitted: 0 };
         state.suppliesQueue = [];
-        
+
         initializePool(s);
 
         document.getElementById('screen-stage-intro').style.display = 'none';
         document.getElementById('game-interface').style.display = 'flex';
         document.getElementById('activity-monitor').innerHTML = '';
         document.getElementById('id-slot').innerHTML = '';
-        
+
         const [h, m] = s.startTime.split(':').map(Number);
         state.gameTimeMinutes = h * 60 + m;
         state.shiftStartMinutes = state.gameTimeMinutes;
         document.getElementById('current-time-display').innerText = formatGameTime(state.gameTimeMinutes);
-        
+
+        updateResUI();
+        updateRegistryUI();
+        setupSlider();
+        setupSupplyInteraction();
+
+        const tutorialKey = TUTORIALS[state.currentStageKey] ? state.currentStageKey : null;
+        if (tutorialKey) {
+            showTutorial(tutorialKey);
+        } else {
+            beginPlay();
+        }
+    }
+
+    function showTutorial(key) {
+        const t = TUTORIALS[key];
+        state.tutorialP1Done = false;
+        state.tutorialP2Done = false;
+
+        const buildPanel = (side) => {
+            const data = t[side];
+            const roleBlock = data.role
+                ? `<p style="font-size:7px;font-weight:900;letter-spacing:1.5px;color:#64748b;text-transform:uppercase;margin-bottom:6px;text-align:center;">YOU ARE A</p>
+                   <p style="font-size:13px;font-weight:900;color:#60a5fa;text-align:center;margin-bottom:10px;">${data.role}</p>`
+                : '';
+            return `
+                ${roleBlock}
+                <p style="font-size:9px;color:#d1d5db;line-height:1.6;text-align:center;margin-bottom:14px;">${data.msg}</p>
+                <div style="text-align:center;">
+                    <button onclick="dismissTutorial(${side === 'p1' ? 1 : 2})"
+                        style="background:#3b82f6;color:white;padding:8px 24px;border-radius:99px;font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:1px;border:none;cursor:pointer;">
+                        GOT IT
+                    </button>
+                </div>`;
+        };
+
+        document.getElementById('tutorial-content-p1').innerHTML = buildPanel('p1');
+        document.getElementById('tutorial-content-p2').innerHTML = buildPanel('p2');
+        document.getElementById('screen-tutorial').style.display = 'flex';
+    }
+
+    function dismissTutorial(player) {
+        if (player === 1) {
+            state.tutorialP1Done = true;
+            document.getElementById('tutorial-p1').innerHTML =
+                '<div style="font-size:11px;color:#22c55e;font-weight:900;text-align:center;letter-spacing:1px;">✓ READY</div>';
+        } else {
+            state.tutorialP2Done = true;
+            document.getElementById('tutorial-p2').innerHTML =
+                '<div style="font-size:11px;color:#22c55e;font-weight:900;text-align:center;letter-spacing:1px;">✓ READY</div>';
+        }
+        if (state.tutorialP1Done && state.tutorialP2Done) {
+            document.getElementById('screen-tutorial').style.display = 'none';
+            beginPlay();
+        }
+    }
+
+    function beginPlay() {
         if (state.timerInterval) clearInterval(state.timerInterval);
         state.timerInterval = setInterval(() => {
             state.gameTimeMinutes += 1;
@@ -790,12 +891,7 @@
             updateRegistryUI();
             updateBreakAreaUI();
         }, 10000);
-
-        updateResUI();
-        updateRegistryUI();
         spawnVisitor();
-        setupSlider();
-        setupSupplyInteraction();
         log("Shift started.");
         setAlert("Standby for Visitors");
     }
@@ -836,9 +932,26 @@
             return;
         }
 
+        const stage = state.currentStageKey;
+        const showOnsite = stage !== '1';
+        const showBreak  = stage !== '1' && stage !== '2';
+        const showEnergy = stage !== '1';
+
         list.innerHTML = visibleOnSite.map(p => {
             const rowClass = p.exitedOverwork ? 'exited' : p.onSupplyRun ? 'on-supply-run' : (p.onBreak ? 'on-break' : '');
             const lockAll = p.exitedOverwork || p.onSupplyRun ? 'disabled' : '';
+            const onsiteCheck = showOnsite
+                ? `<input type="checkbox" class="registry-check" ${p.exitedOverwork ? '' : 'checked'} ${lockAll} onchange="toggleOnsite('${p.id}', this.checked)">`
+                : '';
+            const breakCheck = showBreak
+                ? `<input type="checkbox" class="registry-check" ${p.onBreak ? 'checked' : ''} ${p.onBreak || lockAll ? 'disabled' : ''} onchange="toggleBreak('${p.id}', this.checked)">`
+                : '';
+            const checksDiv = (showOnsite || showBreak)
+                ? `<div class="flex items-center gap-6 px-3">${onsiteCheck}${breakCheck}</div>`
+                : '';
+            const energyBar = showEnergy
+                ? `<div class="energy-bar-container"><div class="energy-bar" style="width:${p.energy}%;background:${getEnergyColor(p.energy)};"></div></div>`
+                : '';
             return `
             <div class="registry-row ${rowClass}" id="reg-${p.id}">
                 <div class="flex items-center justify-between">
@@ -846,14 +959,9 @@
                         <b class="text-white">${p.name}</b><br/>
                         <span class="opacity-50 text-[7px] uppercase">${p.role}</span>
                     </div>
-                    <div class="flex items-center gap-6 px-3">
-                        <input type="checkbox" class="registry-check" ${p.exitedOverwork ? '' : 'checked'} ${lockAll} onchange="toggleOnsite('${p.id}', this.checked)">
-                        <input type="checkbox" class="registry-check" ${p.onBreak ? 'checked' : ''} ${p.onBreak || lockAll ? 'disabled' : ''} onchange="toggleBreak('${p.id}', this.checked)">
-                    </div>
+                    ${checksDiv}
                 </div>
-                <div class="energy-bar-container">
-                    <div class="energy-bar" style="width: ${p.energy}%; background: ${getEnergyColor(p.energy)};"></div>
-                </div>
+                ${energyBar}
                 ${p.exitedOverwork ? '<div class="exited-overlay">Exited site due to overwork</div>' : ''}
                 ${p.onSupplyRun ? `<div class="supply-run-overlay">Supply Run — returning ${p.supplyItem ? p.supplyItem.toUpperCase() : ''}</div>` : ''}
             </div>`;
