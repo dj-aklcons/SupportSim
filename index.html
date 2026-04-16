@@ -564,17 +564,17 @@
                         <span>🦺</span>
                         <span id="res-vest" class="res-count">0</span>
                     </div>
-                    <div class="ppe-icon" data-type="walkie" id="stock-walkie">
-                        <span>📻</span>
-                        <span id="res-walkie" class="res-count">∞</span>
+                    <div class="ppe-icon" data-type="soaking-pad" id="stock-soaking-pad">
+                        <span>🟦</span>
+                        <span id="res-soaking-pad" class="res-count">∞</span>
                     </div>
-                    <div class="ppe-icon" data-type="clipboard" id="stock-clipboard">
-                        <span>📋</span>
-                        <span id="res-clipboard" class="res-count">∞</span>
+                    <div class="ppe-icon" data-type="blotting-paper" id="stock-blotting-paper">
+                        <span>⬜</span>
+                        <span id="res-blotting-paper" class="res-count">∞</span>
                     </div>
-                    <div class="ppe-icon" data-type="rubbish" id="stock-rubbish">
-                        <span>🗑️</span>
-                        <span id="res-rubbish" class="res-count">∞</span>
+                    <div class="ppe-icon" data-type="bucket" id="stock-bucket">
+                        <span>🪣</span>
+                        <span id="res-bucket" class="res-count">∞</span>
                     </div>
                 </div>
 
@@ -605,7 +605,7 @@
                 { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I’m here for the pipe repair.", energy: 100, breakRequired: false },
                 { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Something about water?", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 0, gloves: 6, vest: 4, walkie: 99, clipboard: 99, rubbish: 99 },
+            resources: { mask: 0, gloves: 6, vest: 4, 'soaking-pad': 99, 'blotting-paper': 99, bucket: 99 },
             target: 3,
             next: '2'
         },
@@ -620,7 +620,7 @@
                 { id: "v6", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I'll go up to the Plant Room after this.", energy: 100, breakRequired: false },
                 { id: "v7", name: "Unknown", role: "Public", org: "None", authorised: false, ppe: [], msg: "Can I use the toilet that still works?", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 4, gloves: 4, vest: 2, walkie: 99, clipboard: 99, rubbish: 99 },
+            resources: { mask: 4, gloves: 4, vest: 2, 'soaking-pad': 99, 'blotting-paper': 99, bucket: 99 },
             target: 4,
             next: '3A'
         },
@@ -641,7 +641,7 @@
                 { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Need me to order more supplies?", energy: 50, breakRequired: true },
                 { id: "v17", name: "Reporter", role: "Press", org: "The CBD Seer", authorised: false, ppe: [], msg: "Anything valuable in there?", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 10, gloves: 10, vest: 10, walkie: 99, clipboard: 99, rubbish: 99 },
+            resources: { mask: 10, gloves: 10, vest: 10, 'soaking-pad': 99, 'blotting-paper': 99, bucket: 99 },
             target: 10,
             next: '3B'
         },
@@ -994,9 +994,9 @@
             { type: 'mask',      emoji: '😷', label: 'Mask'      },
             { type: 'gloves',    emoji: '🧤', label: 'Gloves'    },
             { type: 'vest',      emoji: '🦺', label: 'Vest'      },
-            { type: 'walkie',    emoji: '📻', label: 'Walkie'    },
-            { type: 'clipboard', emoji: '📋', label: 'Clipboard' },
-            { type: 'rubbish',   emoji: '🗑️', label: 'Rubbish'  },
+            { type: 'soaking-pad',    emoji: '🟦', label: 'Soaking Pad'    },
+            { type: 'blotting-paper', emoji: '⬜', label: 'Blotting Paper' },
+            { type: 'bucket',         emoji: '🪣', label: 'Bucket'         },
         ];
 
         box.innerHTML = `
@@ -1314,7 +1314,7 @@
     }
 
     function updateResUI() {
-        ['mask', 'gloves', 'vest', 'walkie', 'clipboard', 'rubbish'].forEach(type => {
+        ['mask', 'gloves', 'vest', 'soaking-pad', 'blotting-paper', 'bucket'].forEach(type => {
             const el = document.getElementById(`res-${type}`);
             if (el) el.innerText = state.resources[type] > 90 ? '∞' : state.resources[type];
         });
