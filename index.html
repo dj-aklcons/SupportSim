@@ -496,13 +496,12 @@
     </div>
 </div>
 
-<div id="screen-tutorial" style="display:none;position:fixed;inset:0;z-index:9000;flex-direction:column;">
-    <div id="tutorial-p1" style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;align-items:center;justify-content:center;padding:12px 16px;background:#0f172a;">
-        <div id="tutorial-content-p1" style="width:100%;max-width:340px;"></div>
-    </div>
-    <div id="tutorial-p2" style="height:50%;display:flex;align-items:center;justify-content:center;padding:12px 16px;background:#0f172a;">
-        <div id="tutorial-content-p2" style="width:100%;max-width:340px;"></div>
-    </div>
+<div id="tutorial-p1" style="display:none;position:fixed;top:0;left:0;right:0;height:45%;background:rgba(15,23,42,0.94);z-index:9000;transform:rotate(180deg);align-items:center;justify-content:center;padding:16px;">
+    <div id="tutorial-content-p1" style="width:100%;max-width:340px;text-align:center;"></div>
+</div>
+
+<div id="tutorial-p2" style="display:none;position:fixed;bottom:0;left:0;right:0;height:45%;background:rgba(15,23,42,0.94);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+    <div id="tutorial-content-p2" style="width:100%;max-width:340px;text-align:center;"></div>
 </div>
 
 <div id="screen-summary" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
@@ -543,8 +542,8 @@
             <div class="flex items-center justify-between mb-1">
                 <h3 class="text-[9px] font-black text-blue-400 uppercase">Personnel On-Site</h3>
                 <div class="flex gap-2 text-[7px] font-bold text-slate-500">
-                    <span class="w-8 text-center">ONSITE</span>
-                    <span class="w-8 text-center">BREAK</span>
+                    <span id="col-onsite" class="w-8 text-center">ONSITE</span>
+                    <span id="col-break" class="w-8 text-center">BREAK</span>
                 </div>
             </div>
             <div id="registry-list" class="flex-1 text-[9px] space-y-1 overflow-y-auto pr-1"></div>
@@ -705,7 +704,7 @@
                 msg: 'Keep registering workers on the site. If you are low on supplies, uncheck the ONSITE box to send someone on a supply run. Remember, only Support Team members can do this work!'
             }
         },
-        '3': {
+        '3A': {
             p1: {
                 role: null,
                 msg: 'Great job! You\'re in charge of team members taking a break. Once they\'ve had a rest, tap them to send them back into the field!'
@@ -796,6 +795,7 @@
     }
 
     function startStage() {
+        if (document.getElementById('screen-stage-intro').style.display !== 'flex') return;
         const s = STAGES[state.currentStageKey];
         if (s.resources) state.resources = { ...s.resources };
         state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0, ppeViolations: 0, authorisedAdmitted: 0 };
@@ -834,37 +834,33 @@
         const buildPanel = (side) => {
             const data = t[side];
             const roleBlock = data.role
-                ? `<p style="font-size:7px;font-weight:900;letter-spacing:1.5px;color:#64748b;text-transform:uppercase;margin-bottom:6px;text-align:center;">YOU ARE A</p>
-                   <p style="font-size:13px;font-weight:900;color:#60a5fa;text-align:center;margin-bottom:10px;">${data.role}</p>`
+                ? `<p style="font-size:7px;font-weight:900;letter-spacing:1.5px;color:#64748b;text-transform:uppercase;margin-bottom:6px;">YOU ARE A</p>
+                   <p style="font-size:13px;font-weight:900;color:#60a5fa;margin-bottom:10px;">${data.role}</p>`
                 : '';
             return `
                 ${roleBlock}
-                <p style="font-size:9px;color:#d1d5db;line-height:1.6;text-align:center;margin-bottom:14px;">${data.msg}</p>
-                <div style="text-align:center;">
-                    <button onclick="dismissTutorial(${side === 'p1' ? 1 : 2})"
-                        style="background:#3b82f6;color:white;padding:8px 24px;border-radius:99px;font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:1px;border:none;cursor:pointer;">
-                        GOT IT
-                    </button>
-                </div>`;
+                <p style="font-size:9px;color:#d1d5db;line-height:1.6;margin-bottom:14px;">${data.msg}</p>
+                <button onclick="dismissTutorial(${side === 'p1' ? 1 : 2})"
+                    style="background:#3b82f6;color:white;padding:8px 24px;border-radius:99px;font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:1px;border:none;cursor:pointer;">
+                    GOT IT
+                </button>`;
         };
 
         document.getElementById('tutorial-content-p1').innerHTML = buildPanel('p1');
         document.getElementById('tutorial-content-p2').innerHTML = buildPanel('p2');
-        document.getElementById('screen-tutorial').style.display = 'flex';
+        document.getElementById('tutorial-p1').style.display = 'flex';
+        document.getElementById('tutorial-p2').style.display = 'flex';
     }
 
     function dismissTutorial(player) {
         if (player === 1) {
             state.tutorialP1Done = true;
-            document.getElementById('tutorial-p1').innerHTML =
-                '<div style="font-size:11px;color:#22c55e;font-weight:900;text-align:center;letter-spacing:1px;">✓ READY</div>';
+            document.getElementById('tutorial-p1').style.display = 'none';
         } else {
             state.tutorialP2Done = true;
-            document.getElementById('tutorial-p2').innerHTML =
-                '<div style="font-size:11px;color:#22c55e;font-weight:900;text-align:center;letter-spacing:1px;">✓ READY</div>';
+            document.getElementById('tutorial-p2').style.display = 'none';
         }
         if (state.tutorialP1Done && state.tutorialP2Done) {
-            document.getElementById('screen-tutorial').style.display = 'none';
             beginPlay();
         }
     }
@@ -936,6 +932,10 @@
         const showOnsite = stage !== '1';
         const showBreak  = stage !== '1' && stage !== '2';
         const showEnergy = stage !== '1';
+        const colOnsite = document.getElementById('col-onsite');
+        const colBreak  = document.getElementById('col-break');
+        if (colOnsite) colOnsite.style.visibility = showOnsite ? 'visible' : 'hidden';
+        if (colBreak)  colBreak.style.visibility  = showBreak  ? 'visible' : 'hidden';
 
         list.innerHTML = visibleOnSite.map(p => {
             const rowClass = p.exitedOverwork ? 'exited' : p.onSupplyRun ? 'on-supply-run' : (p.onBreak ? 'on-break' : '');
@@ -1400,6 +1400,7 @@
     }
 
     function nextStageFromSummary() {
+        if (document.getElementById('screen-summary').style.display === 'none') return;
         const next = STAGES[state.currentStageKey].next;
         if (next) showStageIntro(next);
         else location.reload();
