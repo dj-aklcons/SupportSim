@@ -605,7 +605,7 @@
                 { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I’m here for the pipe repair.", energy: 100, breakRequired: false },
                 { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Something about water?", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 0, gloves: 6, vest: 4, 'soaking-pad': 99, 'blotting-paper': 99, bucket: 99 },
+            resources: { mask: 0, gloves: 6, vest: 4, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
             target: 3,
             next: '2'
         },
@@ -620,7 +620,7 @@
                 { id: "v6", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I'll go up to the Plant Room after this.", energy: 100, breakRequired: false },
                 { id: "v7", name: "Unknown", role: "Public", org: "None", authorised: false, ppe: [], msg: "Can I use the toilet that still works?", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 4, gloves: 4, vest: 2, 'soaking-pad': 99, 'blotting-paper': 99, bucket: 99 },
+            resources: { mask: 4, gloves: 4, vest: 2, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
             target: 4,
             next: '3A'
         },
@@ -641,7 +641,7 @@
                 { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Need me to order more supplies?", energy: 50, breakRequired: true },
                 { id: "v17", name: "Reporter", role: "Press", org: "The CBD Seer", authorised: false, ppe: [], msg: "Anything valuable in there?", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 10, gloves: 10, vest: 10, 'soaking-pad': 99, 'blotting-paper': 99, bucket: 99 },
+            resources: { mask: 10, gloves: 10, vest: 10, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
             target: 10,
             next: '3B'
         },
@@ -681,6 +681,15 @@
             target: 10,
             next: null
         }
+    };
+
+    const SUPPLY_CONFIG = {
+        mask:             { pack: 1,  restock: 5,  max: 20  },
+        gloves:           { pack: 1,  restock: 5,  max: 20  },
+        vest:             { pack: 1,  restock: 5,  max: 20  },
+        'soaking-pad':    { pack: 10, restock: 50, max: 100 },
+        'blotting-paper': { pack: 10, restock: 50, max: 100 },
+        bucket:           { pack: 1,  restock: 5,  max: 10  }
     };
 
     const TUTORIALS = {
@@ -1155,8 +1164,9 @@
         document.querySelectorAll('.ppe-icon').forEach(icon => {
             icon.onpointerdown = (e) => {
                 const type = icon.dataset.type;
-                if (state.resources[type] <= 0) { log(`Inventory empty: ${type.toUpperCase()}`, 'error'); return; }
-                if (state.resources[type] < 90) state.resources[type]--;
+                const cfg = SUPPLY_CONFIG[type] || { pack: 1, max: 99 };
+                if ((state.resources[type] ?? 0) < cfg.pack) { log(`Inventory empty: ${type.toUpperCase()}`, 'error'); return; }
+                state.resources[type] -= cfg.pack;
                 updateResUI();
                 const dragEl = document.createElement('div');
                 dragEl.className = 'ppe-drag';
@@ -1275,10 +1285,15 @@
                 // Handle supply return top-up
                 if (v.data._supplyReturn) {
                     const item = v.data._supplyItem;
-                    if (v.data.role === 'Support Team' && item && state.resources[item] <= 90) {
-                        state.resources[item] = Math.min(90, state.resources[item] + 5);
-                        updateResUI();
-                        log(`${v.data.name} restocked ${item.toUpperCase()} (+5).`);
+                    if (v.data.role === 'Support Team' && item) {
+                        const rcfg = SUPPLY_CONFIG[item] || { restock: 5, max: 20 };
+                        if (state.resources[item] < rcfg.max) {
+                            state.resources[item] = Math.min(rcfg.max, state.resources[item] + rcfg.restock);
+                            updateResUI();
+                            log(`${v.data.name} restocked ${item.toUpperCase()} (+${rcfg.restock}).`);
+                        } else {
+                            log(`${v.data.name} returned without supplies.`);
+                        }
                     } else {
                         log(`${v.data.name} returned without supplies.`);
                     }
@@ -1316,7 +1331,7 @@
     function updateResUI() {
         ['mask', 'gloves', 'vest', 'soaking-pad', 'blotting-paper', 'bucket'].forEach(type => {
             const el = document.getElementById(`res-${type}`);
-            if (el) el.innerText = state.resources[type] > 90 ? '∞' : state.resources[type];
+            if (el) el.innerText = state.resources[type] ?? 0;
         });
     }
 
