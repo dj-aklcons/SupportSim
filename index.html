@@ -562,27 +562,27 @@
             <div class="flex gap-3 mb-2">
                 <div class="grid grid-cols-2 gap-1.5 shrink-0">
                     <div class="ppe-icon" data-type="mask" id="stock-mask">
-                        <span>😷</span>
+                        <img src="assets/icons/icon-mask.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>😷</span>'">
                         <span id="res-mask" class="res-count">0</span>
                     </div>
                     <div class="ppe-icon" data-type="gloves" id="stock-gloves">
-                        <span>🧤</span>
+                        <img src="assets/icons/icon-gloves.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>🧤</span>'">
                         <span id="res-gloves" class="res-count">0</span>
                     </div>
                     <div class="ppe-icon" data-type="vest" id="stock-vest">
-                        <span>🦺</span>
+                        <img src="assets/icons/icon-vest.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>🦺</span>'">
                         <span id="res-vest" class="res-count">0</span>
                     </div>
                     <div class="ppe-icon" data-type="soaking-pad" id="stock-soaking-pad">
-                        <span>🟦</span>
+                        <img src="assets/icons/icon-soaking-pad.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>🟦</span>'">
                         <span id="res-soaking-pad" class="res-count">∞</span>
                     </div>
                     <div class="ppe-icon" data-type="blotting-paper" id="stock-blotting-paper">
-                        <span>⬜</span>
+                        <img src="assets/icons/icon-blotting-paper.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>⬜</span>'">
                         <span id="res-blotting-paper" class="res-count">∞</span>
                     </div>
                     <div class="ppe-icon" data-type="bucket" id="stock-bucket">
-                        <span>🪣</span>
+                        <img src="assets/icons/icon-bucket.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>🪣</span>'">
                         <span id="res-bucket" class="res-count">∞</span>
                     </div>
                 </div>
@@ -617,6 +617,7 @@
             resources: { mask: 0, gloves: 6, vest: 4, ‘soaking-pad’: 100, ‘blotting-paper’: 100, bucket: 10 },
             target: 3,
             next: ‘2’,
+            threats: [‘leak’, ‘flood’],
             departureRegistry: [
                 { id: "v1", checkoutMsg: "The shelf’s fine — I’ve moved the material just in case. Heading off now." },
                 { id: "v2", checkoutMsg: "Pipe’s fixed. You shouldn’t get any more water through there." },
@@ -638,6 +639,7 @@
             resources: { mask: 4, gloves: 4, vest: 2, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
             target: 5,
             next: '3A',
+            threats: ['high-rh', 'mould'],
             departureRegistry: [
                 { id: "v4",  checkoutMsg: "Conditions are holding steady. I've flagged the readings for monitoring." },
                 { id: "v5",  checkoutMsg: "Dataloggers are set and recording. I'll review the data first thing tomorrow." },
@@ -702,6 +704,7 @@
             ],
             target: 10,
             next: null,
+            threats: ['leak', 'flood', 'mould', 'theft'],
             departureRegistry: [
                 { id: "v8",  checkoutMsg: "Heritage items are secured and documented. Tough day — great response." },
                 { id: "v19", checkoutMsg: "Mould report goes to the Manager first thing tomorrow. Thanks everyone." },
@@ -758,6 +761,79 @@
             }
         }
     };
+
+    const ASSETS = {
+        avatars:   'assets/avatars/',
+        idCards:   'assets/id-cards/',
+        icons:     'assets/icons/'
+    };
+
+    const AVATAR_MAP = {
+        v1:  'avatar-libby-rarian.png',
+        v2:  'avatar-plumber-1.png',
+        v3:  'avatar-plumber-2.png',
+        v4:  'avatar-connie-servator.png',
+        v5:  'avatar-tek-nizian.png',
+        v6:  'avatar-hvac-engineer.png',
+        v7:  'avatar-public.png',
+        v8:  'avatar-connie-servator.png',
+        v9:  'avatar-konsa-vazion.png',
+        v10: 'avatar-tek-nizian.png',
+        v11: 'avatar-plumber-1.png',
+        v12: 'avatar-plumber-2.png',
+        v13: 'avatar-hvac-engineer.png',
+        v14: 'avatar-sal-vager.png',
+        v15: 'avatar-annie-de-break.png',
+        v16: 'avatar-sue-portman.png',
+        v17: 'avatar-reporter.png',
+        v18: 'avatar-dizzy-astrous.png',
+        v19: 'avatar-blotte-papier.png',
+        v20: 'avatar-klee-anup.png',
+        v21: 'avatar-general-1.png',
+        v22: 'avatar-general-2.png',
+        v23: 'avatar-hvac-tech.png',
+        v24: 'avatar-frasier-bags.png',
+        v25: 'avatar-plaz-tic-baggins.png',
+        v26: 'avatar-preppe-de-saster.png',
+        v27: 'avatar-mayor.png',
+        v28: 'avatar-general-1.png',
+        v29: 'avatar-general-2.png',
+        v30: 'avatar-curator.png',
+        v31: 'avatar-sue-portman.png',
+        security: 'avatar-security.png'
+    };
+
+    const ID_CARD_MAP = {
+        'Librarian Research':  'id-card-libraries.png',
+        'Conservator':         'id-card-libraries.png',
+        'Conservation Tech':   'id-card-libraries.png',
+        'Support Team':        'id-card-libraries.png',
+        'Salvage Team Lead':   'id-card-libraries.png',
+        'Salvage Team':        'id-card-libraries.png',
+        'Heritage':            'id-card-libraries.png',
+        'Regional':            'id-card-libraries.png',
+        'Plumber':             'id-card-plumber.png',
+        'HVAC Engineer':       'id-card-hvac.png',
+        'HVAC Tech':           'id-card-hvac.png',
+        'General':             'id-card-general-contractor.png',
+        'Public':              'id-card-visitor-pass.png',
+        'Press':               'id-card-press.png'
+    };
+
+    const PPE_EMOJI = {
+        mask: '😷', gloves: '🧤', vest: '🦺',
+        'soaking-pad': '🟦', 'blotting-paper': '⬜', bucket: '🪣'
+    };
+
+    function avatarImg(id, sizePx, rounded = true) {
+        const file = AVATAR_MAP[id];
+        const radius = rounded ? '50%' : '4px';
+        const fallback = id === 'security' ? '🛡️' : '👤';
+        if (!file) return `<span style="font-size:${Math.round(sizePx * 0.55)}px;line-height:1;">${fallback}</span>`;
+        return `<img src="${ASSETS.avatars}${file}"
+            style="width:${sizePx}px;height:${sizePx}px;object-fit:cover;border-radius:${radius};display:block;"
+            alt="" onerror="this.outerHTML='<span style=\\'font-size:${Math.round(sizePx * 0.55)}px;line-height:1;\\'>${fallback}</span>'">`;
+    }
 
     let state = {
         currentStageKey: '1',
@@ -1186,7 +1262,7 @@
                         <svg class="energy-progress-svg" width="44" height="44">
                             <circle cx="22" cy="22" r="20" fill="transparent" stroke="#22c55e" stroke-width="4" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" style="transition: stroke-dashoffset 0.5s ease;"/>
                         </svg>
-                        <span class="text-lg">👤</span>
+                        ${avatarImg(p.id, 30)}
                     </div>
                     <span class="text-[8px] font-bold mt-1 text-slate-400">${p.name.split(' ')[0]}</span>
                 </div>`;
@@ -1216,7 +1292,7 @@
         if (track) track.style.display = state.departureMode ? 'none' : '';
         const visitor = document.createElement('div');
         visitor.className = 'visitor';
-        visitor.innerHTML = '👤';
+        visitor.innerHTML = avatarImg(data.id, 85);
         visitor.onclick = () => {
             createIDCard(data, visitor);
             setAlert(state.departureMode ? "Personnel Checking Out — Uncheck ONSITE to confirm" : "Visitor Arrived — Check Status");
@@ -1242,7 +1318,7 @@
         const visitor = document.createElement('div');
         visitor.className = 'visitor';
         visitor.style.background = '#ef4444';
-        visitor.innerHTML = '🛡️';
+        visitor.innerHTML = avatarImg('security', 85);
         const bubble = document.createElement('div');
         bubble.className = 'speech-bubble';
         bubble.innerText = `You let ${event.breachedName} (${event.breachedRole}) in! I've asked them to leave the site.`;
@@ -1332,12 +1408,23 @@
         card.style.top = '12%';
         const orgText = data.authorised ? data.org : "NOT REGISTERED";
         const footerText = data.authorised ? "Visitor ID Card" : "VISITOR PASS";
+        const cardFile = ID_CARD_MAP[data.role] || 'id-card-visitor-pass.png';
+        const avatarFile = AVATAR_MAP[data.id] || null;
         card.innerHTML = `
-            <div class="card-inner flipped" id="card-inner">
-                <div class="w-8 h-8 bg-slate-200 rounded mb-1"></div>
-                <b class="text-[9px] uppercase">${data.name}</b>
-                <span class="text-[7px] opacity-60">${orgText}</span>
-                <div class="mt-2 pt-1 border-t w-full text-[5px] text-center uppercase tracking-widest">${footerText}</div>
+            <div class="card-inner flipped" id="card-inner" style="position:relative;overflow:hidden;padding:0;">
+                <img src="${ASSETS.idCards}${cardFile}"
+                    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                    alt="" onerror="this.style.display='none'">
+                <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:8px 6px;gap:3px;">
+                    <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:#e2e8f0;flex-shrink:0;">
+                        ${avatarFile
+                            ? `<img src="${ASSETS.avatars}${avatarFile}" style="width:100%;height:100%;object-fit:cover;" alt="" onerror="this.outerHTML='<span style=\\'font-size:20px;line-height:36px;display:block;text-align:center;\\'>👤</span>'">`
+                            : `<span style="font-size:20px;line-height:36px;display:block;text-align:center;">👤</span>`}
+                    </div>
+                    <b style="font-size:8px;text-transform:uppercase;text-align:center;line-height:1.2;color:#1e293b;">${data.name}</b>
+                    <span style="font-size:6px;color:#475569;text-align:center;">${orgText}</span>
+                    <div style="margin-top:4px;padding-top:3px;border-top:1px solid #cbd5e1;width:100%;font-size:5px;text-align:center;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">${footerText}</div>
+                </div>
             </div>`;
         document.body.appendChild(card);
         initDrag(card, 'ID');
@@ -1353,7 +1440,7 @@
                 updateResUI();
                 const dragEl = document.createElement('div');
                 dragEl.className = 'ppe-drag';
-                dragEl.innerHTML = icon.querySelector('span').innerText;
+                dragEl.innerHTML = `<img src="${ASSETS.icons}icon-${type}.png" style="width:26px;height:26px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>${PPE_EMOJI[type] || '📦'}</span>'">`;
                 dragEl.dataset.type = type;
                 dragEl.style.left = (e.clientX - 25) + 'px';
                 dragEl.style.top = (e.clientY - 25) + 'px';
@@ -1580,9 +1667,22 @@
         const isFinal = !STAGES[state.currentStageKey].next;
         const btnLabel = isFinal ? 'ALL SHIFTS COMPLETE' : 'NEXT SHIFT';
 
+        const stageThreats = STAGES[state.currentStageKey].threats || [];
+        const threatsHTML = stageThreats.length === 0 ? '' : `
+            <div style="display:flex;gap:8px;justify-content:center;align-items:flex-end;margin-bottom:8px;">
+                ${stageThreats.map(t => `
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <img src="${ASSETS.icons}threat-${t}.png"
+                            style="width:28px;height:28px;object-fit:contain;"
+                            alt="${t}" onerror="this.style.display='none'">
+                        <span style="font-size:6px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">${t.replace('-',' ')}</span>
+                    </div>`).join('')}
+            </div>`;
+
         const summaryHTML = `
             <p style="font-size:9px;font-weight:900;letter-spacing:2px;color:#64748b;text-transform:uppercase;margin-bottom:5px;text-align:center;">
                 Shift Summary — ${STAGES[state.currentStageKey].title || 'Shift'}</p>
+            ${threatsHTML}
             <div style="margin-bottom:5px;">
                 ${row('Registration Accuracy', regPct + '%',                          pctColor(regPct),          regNote)}
                 ${row('Safety Compliance',     safePct + '%',                         pctColor(safePct),         safeNote)}
