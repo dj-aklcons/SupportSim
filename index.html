@@ -504,6 +504,15 @@
     <div id="tutorial-content-p2" style="width:100%;max-width:340px;text-align:center;"></div>
 </div>
 
+<div id="screen-debrief" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
+    <div style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;align-items:center;justify-content:center;padding:12px 16px;overflow:hidden;">
+        <div id="debrief-content-p1" style="width:100%;max-width:360px;text-align:center;"></div>
+    </div>
+    <div style="height:50%;display:flex;align-items:center;justify-content:center;padding:12px 16px;overflow:hidden;">
+        <div id="debrief-content-p2" style="width:100%;max-width:360px;text-align:center;"></div>
+    </div>
+</div>
+
 <div id="screen-summary" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
     <div id="summary-p1" style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px;overflow:hidden;">
         <div id="summary-content-p1" style="width:100%;max-width:360px;"></div>
@@ -595,91 +604,116 @@
 
 <script>
     const STAGES = {
-        '1': {
+        ‘1’: {
             title: "A Burst Pipe",
             startTime: "11:39",
-            desc: "The cleaner has reported a leak in the level 2 bathrooms. Water has flooded the floor so we want to control it before it spreads. An RFS is raised, contractors are on their way!",
-            orders: ["Verify Response IDs.", "Gloves mandatory for site entry."],
+            desc: "The cleaner has reported a burst pipe in the Level 2 bathrooms. Water is spreading toward the stacks — we need to contain it before it reaches anything irreplaceable. A Request for Service has been raised with Facilities, and contractors are on their way.",
+            orders: ["Check Visitor ID cards before entry.", "Gloves are mandatory for all site entry."],
             registry: [
-                { id: "v1", name: "Libby Rarian", role: "Librarian Research", org: "Libraries", authorised: true, ppe: ["gloves"], msg: "Has anyone checked the store below?", energy: 100, breakRequired: false },
-                { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I’m here for the pipe repair.", energy: 100, breakRequired: false },
-                { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Something about water?", energy: 100, breakRequired: false }
+                { id: "v1", name: "Libby Rarian", role: "Librarian Research", org: "Libraries", authorised: true, ppe: ["gloves"], msg: "Has anyone checked the heritage material on the shelf below? I’m worried about water damage.", energy: 100, breakRequired: false },
+                { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I’m here for the pipe repair. Which floor is the bathroom on?", energy: 100, breakRequired: false },
+                { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Someone said there’s flooding? I’ve got my gear.", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 0, gloves: 6, vest: 4, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
+            resources: { mask: 0, gloves: 6, vest: 4, ‘soaking-pad’: 100, ‘blotting-paper’: 100, bucket: 10 },
             target: 3,
-            next: '2'
+            next: ‘2’,
+            departureRegistry: [
+                { id: "v1", checkoutMsg: "The shelf’s fine — I’ve moved the material just in case. Heading off now." },
+                { id: "v2", checkoutMsg: "Pipe’s fixed. You shouldn’t get any more water through there." },
+                { id: "v3", checkoutMsg: "All sorted. Give us a call if it starts again." }
+            ]
         },
         '2': {
             title: "Air Conditioning Failure",
             startTime: "08:22",
-            desc: "Heritage staff have arrived at work and discovered the storeroom feels unusually warm. An RFS has been raised, and Conservation were called to check out the dataloggers.",
-            orders: ["Masks + Gloves mandatory for mould check.", "Verify Heritage Authority IDs.", "No public access allowed."],
+            desc: "Heritage staff have arrived to find conditions in the storeroom are off — the temperature has been rising overnight and there are concerns about mould risk to the collection. An RFS has been raised, and the Conservation team has been called in to assess.",
+            orders: ["Check Visitor ID cards before entry.", "Masks and Gloves are mandatory for mould assessment.", "No public access permitted."],
             registry: [
-                { id: "v4", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Hope the aircon hasn't been off for a long time!", energy: 70, breakRequired: true },
-                { id: "v5", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I'm gonna check for mould around the place.", energy: 50, breakRequired: true },
-                { id: "v6", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I'll go up to the Plant Room after this.", energy: 100, breakRequired: false },
-                { id: "v7", name: "Unknown", role: "Public", org: "None", authorised: false, ppe: [], msg: "Can I use the toilet that still works?", energy: 100, breakRequired: false }
+                { id: "v31", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "Let me know if you need any supplies. I can go off site.", energy: 80, breakRequired: true, order: 0 },
+                { id: "v4", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Hope the aircon hasn't been off too long — the collection won't cope if humidity goes above 65%.", energy: 70, breakRequired: true },
+                { id: "v5", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I'll set up the dataloggers and check the RH readings.", energy: 50, breakRequired: true },
+                { id: "v6", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I need to get to the Plant Room to check the unit. Could just be a fault.", energy: 100, breakRequired: false },
+                { id: "v7", name: "Unknown", role: "Public", org: "None", authorised: false, ppe: [], msg: "I heard the archive was open today. Can I come in and look around?", energy: 100, breakRequired: false }
             ],
             resources: { mask: 4, gloves: 4, vest: 2, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
-            target: 4,
-            next: '3A'
+            target: 5,
+            next: '3A',
+            departureRegistry: [
+                { id: "v4",  checkoutMsg: "Conditions are holding steady. I've flagged the readings for monitoring." },
+                { id: "v5",  checkoutMsg: "Dataloggers are set and recording. I'll review the data first thing tomorrow." },
+                { id: "v6",  checkoutMsg: "Unit's running again. Should cool down within the hour." },
+                { id: "v31", checkoutMsg: "Site's all clear now. We're done.", pinLast: true }
+            ]
         },
         '3A': {
             title: "Leaking Water Fountain",
             startTime: "15:00",
-            desc: "A Research Librarian has discovered water leaking in the Upper Basement. It's coming from the Ground Floor water fountain, so we'll need contractors upstairs, and a check for mould downstairs.",
-            orders: ["Mould Hazard: Full Respirators + Gloves + Vest.", "Ensure staff energy levels stay high.", "Monitor Salvage Team closely."],
+            desc: "A Research Librarian has discovered water pooling in the Upper Basement — traced to a cracked water fountain on the Ground Floor above. Contractors are heading upstairs to cut the supply while Conservation staff investigate below for water damage and potential mould.",
+            orders: ["Check Visitor ID cards before entry.", "Mould Hazard: Gloves + Vest mandatory.", "Ensure staff energy levels stay high — manage breaks.", "No unauthorised access under any circumstances."],
             registry: [
-                { id: "v8", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Not again!", energy: 100, breakRequired: true },
-                { id: "v9", name: "Konsa Vazion", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Are the plumbers here yet?", energy: 80, breakRequired: true },
-                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I've got an RH sensor.", energy: 100, breakRequired: true },
-                { id: "v11", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "We came as soon as we could", energy: 100, breakRequired: false },
-                { id: "v12", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I've turned off the mains.", energy: 100, breakRequired: false },
-                { id: "v13", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: [], msg: "Anyone found any mould?", energy: 100, breakRequired: false },
-                { id: "v14", name: "Sal Vager", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Here's the Disaster kit if we need it.", energy: 60, breakRequired: true },
-                { id: "v15", name: "Annie de Break", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Those are Heritage serials!", energy: 20, breakRequired: true },
-                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Need me to order more supplies?", energy: 50, breakRequired: true },
-                { id: "v17", name: "Reporter", role: "Press", org: "The CBD Seer", authorised: false, ppe: [], msg: "Anything valuable in there?", energy: 100, breakRequired: false }
+                { id: "v8",  name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Not again! Please tell me the water hasn't reached the heritage serials.", energy: 100, breakRequired: true },
+                { id: "v9",  name: "Konsa Vazion", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Are the contractors here yet? We need that fountain turned off fast.", energy: 80, breakRequired: true },
+                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I've got an RH sensor — I'll check moisture levels in the basement.", energy: 100, breakRequired: true },
+                { id: "v11", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "We came as soon as we could. Where's the water coming from?", energy: 100, breakRequired: false },
+                { id: "v12", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I've turned off the mains. That should stop the flow.", energy: 100, breakRequired: false },
+                { id: "v13", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: [], msg: "I'm checking the mechanical room while I'm here — routine inspection.", energy: 100, breakRequired: false },
+                { id: "v14", name: "Sal Vager", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I've brought the disaster kit — buckets, soaking pads, the lot.", energy: 60, breakRequired: true },
+                { id: "v15", name: "Annie de Break", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Those are Heritage serials down there! We need to get them out now!", energy: 20, breakRequired: true },
+                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Need me to order more supplies? I can do a run if we're running low.", energy: 50, breakRequired: true },
+                { id: "v17", name: "Reporter", role: "Press", org: "The CBD Seer", authorised: false, ppe: [], msg: "Anything valuable been damaged in there? Our readers would love to know.", energy: 100, breakRequired: false }
             ],
             resources: { mask: 10, gloves: 10, vest: 10, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
             target: 10,
             next: '3B'
         },
-        '3B': {
+        ‘3B’: {
             development: true,
-            alertMsg: "EVENT DEVELOPMENT - MOULD DISCOVERED!",
+            alertMsg: "MOULD DISCOVERED — Full PPE now required. Masks mandatory for all on-site personnel.",
             registry: [
-                { id: "v18", name: "Dizzy Astrous", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Uh Oh, looks like we found mould!", energy: 20, breakRequired: true },
-                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got a kit for taking a mould sample", energy: 10, breakRequired: true },
-                { id: "v20", name: "Klee Anup", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "My first mould outbreak!!", energy: 30, breakRequired: true },
-                { id: "v21", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Leak’s stopped but we’ve found more downstairs", energy: 100, breakRequired: false },
-                { id: "v22", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Where do you want these soaking pads?", energy: 100, breakRequired: false },
-                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "I’m gonna change the air-con filters now", energy: 100, breakRequired: false },
-                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve been called in - what’s happening?", energy: 5, breakRequired: true },
-                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Do you need a break?!", energy: 20, breakRequired: true },
-                { id: "v26", name: "Preppe de Saster", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got some food supplies for the team", energy: 50, breakRequired: true },
-                { id: "v27", name: "Mayor", role: "Regional", org: "Council", authorised: false, ppe: [], msg: "I need to check everything’s done right", energy: 100, breakRequired: false }
+                { id: "v18", name: "Dizzy Astrous", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Mould confirmed in the lower stacks. We need to contain it immediately.", energy: 20, breakRequired: true },
+                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got swabs for sampling — we need to document how far it’s spread.", energy: 10, breakRequired: true },
+                { id: "v20", name: "Klee Anup", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "This is my first mould outbreak — what’s the protocol?", energy: 30, breakRequired: true },
+                { id: "v21", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["mask", "vest"], msg: "Leak’s fixed upstairs, but we’ve found damp patches in the basement wall.", energy: 100, breakRequired: false },
+                { id: "v22", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["mask", "vest"], msg: "Where do you want these soaking pads? I’ve got a full pallet outside.", energy: 100, breakRequired: false },
+                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: ["mask"], msg: "I’m swapping out the air filters — mould spores spread through the ducts.", energy: 100, breakRequired: false },
+                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve been called in for emergency salvage. What’s the priority?", energy: 5, breakRequired: true },
+                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "The blotting paper is going to come in handy for the wet items.", energy: 20, breakRequired: true },
+                { id: "v26", name: "Preppe de Saster", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got food and extra supplies for the team — where should I set up?", energy: 50, breakRequired: true },
+                { id: "v27", name: "Mayor", role: "Regional", org: "Council", authorised: false, ppe: ["mask"], msg: "I’ve decided to do a site visit. It’s election year and I don’t need this.", energy: 100, breakRequired: false }
             ],
             target: 10,
-            next: '3C'
+            next: ‘3C’
         },
-        '3C': {
+        ‘3C’: {
             development: true,
-            alertMsg: "EVENT DEVELOPMENT - DISASTER STABILISED!",
+            title: "Disaster Response Complete",
+            alertMsg: "DISASTER STABILISED — Begin site pack-down.",
             registry: [
-                { id: "v8", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask"], msg: "Can I get some more masks?", energy: -1, breakRequired: true },
-                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Can you order more freezer bags?", energy: -1, breakRequired: true },
-                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I think we’ll need more trolleys down here", energy: -1, breakRequired: true },
-                { id: "v28", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: [], msg: "We’ve got more soaking pads", energy: 100, breakRequired: false },
-                { id: "v29", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Where can I park my car?", energy: 100, breakRequired: false },
-                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "I’m gonna change the air-con filters now", energy: 100, breakRequired: false },
-                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: [], msg: "Anything new going on?", energy: -1, breakRequired: true },
-                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: [], msg: "Did I see the Mayor here?!", energy: -1, breakRequired: true },
-                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "Do you think we need a freezer container?", energy: -1, breakRequired: true },
-                { id: "v30", name: "Curator", role: "Heritage", org: "Libraries", authorised: false, ppe: [], msg: "Can I just grab my favourite serial?", energy: 100, breakRequired: false }
+                { id: "v8",  name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask"], msg: "Mould containment is holding. The heritage items have been moved to safe storage.", energy: -1, breakRequired: true },
+                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Sampling is done — remediation can begin once the area is clear.", energy: -1, breakRequired: true },
+                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "RH is dropping. The dehumidifiers are doing their job.", energy: -1, breakRequired: true },
+                { id: "v28", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: [], msg: "We’ve brought extra soaking pads if you still need them.", energy: 100, breakRequired: false },
+                { id: "v29", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Is there somewhere I can park? I’ve got equipment to unload.", energy: 100, breakRequired: false },
+                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "New filters are in — air quality should improve over the next few hours.", energy: 100, breakRequired: false },
+                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: [], msg: "Salvage priorities are handled. Team’s packing up the kit now.", energy: -1, breakRequired: true },
+                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: [], msg: "Did I see the Mayor on the CCTV earlier? Please tell me they didn’t get past the desk.", energy: -1, breakRequired: true },
+                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "I think we’re through the worst of it. What supplies do we still need before pack-down?", energy: -1, breakRequired: true },
+                { id: "v30", name: "Curator", role: "Heritage", org: "Libraries", authorised: false, ppe: [], msg: "I just need to check on the Tōtara Street serials — they’re completely irreplaceable!", energy: 100, breakRequired: false }
             ],
             target: 10,
-            next: null
+            next: null,
+            departureRegistry: [
+                { id: "v8",  checkoutMsg: "Heritage items are secured and documented. Tough day — great response." },
+                { id: "v19", checkoutMsg: "Mould report goes to the Manager first thing tomorrow. Thanks everyone." },
+                { id: "v10", checkoutMsg: "Sensors are logging and uploading. Conditions are stable." },
+                { id: "v24", checkoutMsg: "Salvage kit’s repacked and signed off. See you at the debrief." },
+                { id: "v25", checkoutMsg: "What a day. Hope we don’t have to do this again too soon." },
+                { id: "v16", checkoutMsg: "Site’s all clear. Good work, team — we’re wrapped up.", pinLast: true }
+            ],
+            debrief: {
+                p1: "From a leaking pipe to a full mould containment — today’s response team held the line. Every person who came through that gate was your call. The site stayed secure, the collection was protected, and the team made it home.",
+                p2: "Three emergencies. One shift. The registration desk kept the team equipped, safe, and accounted for from start to finish. ID cards checked, PPE confirmed, supplies dispatched. Without the desk, no one gets on site — and today, that mattered."
+            }
         }
     };
 
@@ -734,11 +768,15 @@
         activeCard: null,
         gameTimeMinutes: 0,
         timerInterval: null,
-        staffOnSite: [], // ONLY those admitted and authorised
+        staffOnSite: [],
         pool: [],
         suppliesQueue: [],
         tutorialP1Done: false,
-        tutorialP2Done: false
+        tutorialP2Done: false,
+        departureMode: false,
+        securityQueue: [],
+        debriefP1Done: false,
+        debriefP2Done: false
     };
 
     function setAlert(text, isCritical = false) {
@@ -809,6 +847,8 @@
         if (s.resources) state.resources = { ...s.resources };
         state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0, ppeViolations: 0, authorisedAdmitted: 0 };
         state.suppliesQueue = [];
+        state.securityQueue = [];
+        state.departureMode = false;
 
         initializePool(s);
 
@@ -875,6 +915,8 @@
     }
 
     function beginPlay() {
+        const track = document.getElementById('gate-track');
+        if (track) track.style.display = '';
         if (state.timerInterval) clearInterval(state.timerInterval);
         state.timerInterval = setInterval(() => {
             state.gameTimeMinutes += 1;
@@ -902,9 +944,6 @@
     }
 
     function initializePool(s) {
-        const shuffle = (array) => array.sort(() => Math.random() - 0.5);
-        
-        // Handle energy inheritance for 3B/3C
         const rawPool = s.registry.map(p => {
             const existing = state.staffOnSite.find(e => e.id === p.id);
             if (existing && p.energy === -1) {
@@ -912,8 +951,33 @@
             }
             return { ...p, energy: p.energy === -1 ? 100 : p.energy, admitted: false };
         });
+        const fixed = rawPool.filter(p => p.order !== undefined).sort((a, b) => a.order - b.order);
+        const free  = rawPool.filter(p => p.order === undefined).sort(() => Math.random() - 0.5);
+        const pool  = Array(rawPool.length).fill(null);
+        fixed.forEach(p => {
+            const idx = Math.min(p.order, pool.length - 1);
+            if (pool[idx] === null) { pool[idx] = p; }
+            else { let i = idx + 1; while (i < pool.length && pool[i] !== null) i++; if (i < pool.length) pool[i] = p; }
+        });
+        let fi = 0;
+        for (let i = 0; i < pool.length; i++) { if (pool[i] === null) pool[i] = free[fi++]; }
+        state.pool = pool.filter(Boolean);
+    }
 
-        state.pool = shuffle([...rawPool]);
+    function initializeDeparturePool(s) {
+        const rawPool = (s.departureRegistry || []).map(dep => {
+            const person = state.staffOnSite.find(p => p.id === dep.id && !p.exitedOverwork);
+            if (!person) return null;
+            return { ...person, msg: dep.checkoutMsg, pinFirst: dep.pinFirst || false, pinLast: dep.pinLast || false, isDeparture: true };
+        }).filter(Boolean);
+        if (rawPool.length === 0) { proceedAfterDepartures(); return; }
+        const first  = rawPool.filter(p => p.pinFirst);
+        const last   = rawPool.filter(p => p.pinLast);
+        const middle = rawPool.filter(p => !p.pinFirst && !p.pinLast).sort(() => Math.random() - 0.5);
+        state.pool = [...first, ...middle, ...last];
+        state.departureMode = true;
+        setAlert("SITE PACK-DOWN — Check out departing personnel");
+        updateRegistryUI();
     }
 
     function checkCriticalAlert() {
@@ -938,7 +1002,7 @@
         }
 
         const stage = state.currentStageKey;
-        const showOnsite = stage !== '1';
+        const showOnsite = stage !== '1' || state.departureMode;
         const showBreak  = stage !== '1' && stage !== '2';
         const showEnergy = stage !== '1';
         const colOnsite = document.getElementById('col-onsite');
@@ -981,10 +1045,45 @@
         if (!isChecked) {
             const person = state.staffOnSite.find(p => p.id === id);
             if (!person || person.exitedOverwork || person.onSupplyRun) return;
-            const checkbox = document.querySelector(`#reg-${id} .registry-check`);
-            if (checkbox) checkbox.checked = true;
-            showSuppliesPopup(person);
+            if (person.checkoutMsg) {
+                if (!state.activeVisitor || state.activeVisitor.data.id !== id) {
+                    const checkbox = document.querySelector(`#reg-${id} .registry-check`);
+                    if (checkbox) checkbox.checked = true;
+                    return;
+                }
+                state.staffOnSite = state.staffOnSite.filter(p => p.id !== id);
+                log(`${person.name} has left the site.`);
+                updateRegistryUI();
+                updateBreakAreaUI();
+                completeDeparture();
+            } else {
+                const checkbox = document.querySelector(`#reg-${id} .registry-check`);
+                if (checkbox) checkbox.checked = true;
+                showSuppliesPopup(person);
+            }
         }
+    }
+
+    function completeDeparture() {
+        const v = state.activeVisitor;
+        if (v) {
+            v.bubble.style.opacity = '0';
+            v.el.style.transform = 'translateY(-120px)';
+            setTimeout(() => { v.el.style.transform = 'translateY(-120px) translateX(300px)'; v.el.style.opacity = '0'; }, 600);
+            if (state.activeCard) {
+                state.activeCard.classList.add('slotted-exit');
+                const cardRef = state.activeCard;
+                setTimeout(() => cardRef.remove(), 1100);
+                state.activeCard = null;
+            }
+            state.activeVisitor = null;
+        } else {
+            document.getElementById('visitors-container').innerHTML = '';
+        }
+        state.isIdScanned = false;
+        resetSlider();
+        setAlert("SITE PACK-DOWN — Check out departing personnel");
+        setTimeout(spawnVisitor, 2000);
     }
 
     function showSuppliesPopup(person) {
@@ -1100,34 +1199,77 @@
     }
 
     function spawnVisitor() {
+        const secEvent = state.securityQueue.find(e => e.triggerAfter <= state.stats.processed);
+        if (secEvent) {
+            state.securityQueue = state.securityQueue.filter(e => e !== secEvent);
+            spawnSecurityVisitor(secEvent);
+            return;
+        }
         if (state.pool.length === 0) {
             checkSubStageTransition();
             return;
         }
-        
         const data = state.pool.shift();
         const container = document.getElementById('visitors-container');
         container.innerHTML = '';
+        const track = document.getElementById('gate-track');
+        if (track) track.style.display = state.departureMode ? 'none' : '';
         const visitor = document.createElement('div');
         visitor.className = 'visitor';
         visitor.innerHTML = '👤';
-        visitor.onclick = () => { createIDCard(data, visitor); setAlert("Visitor Arrived - Check Status"); };
-        
+        visitor.onclick = () => {
+            createIDCard(data, visitor);
+            setAlert(state.departureMode ? "Personnel Checking Out — Uncheck ONSITE to confirm" : "Visitor Arrived — Check Status");
+        };
         const bubble = document.createElement('div');
         bubble.className = 'speech-bubble';
         bubble.innerText = data.msg;
-        
-        container.appendChild(bubble); 
+        container.appendChild(bubble);
         container.appendChild(visitor);
         state.activeVisitor = { el: visitor, bubble, data, givenPPE: [] };
         state.isIdScanned = false;
         resetSlider();
+        if (state.departureMode) {
+            const person = state.staffOnSite.find(p => p.id === data.id);
+            if (person) person.checkoutMsg = data.msg;
+            updateRegistryUI();
+        }
+    }
+
+    function spawnSecurityVisitor(event) {
+        const container = document.getElementById('visitors-container');
+        container.innerHTML = '';
+        const visitor = document.createElement('div');
+        visitor.className = 'visitor';
+        visitor.style.background = '#ef4444';
+        visitor.innerHTML = '🛡️';
+        const bubble = document.createElement('div');
+        bubble.className = 'speech-bubble';
+        bubble.innerText = `You let ${event.breachedName} (${event.breachedRole}) in! I've asked them to leave the site.`;
+        container.appendChild(bubble);
+        container.appendChild(visitor);
+        state.activeVisitor = null;
+        state.isIdScanned = false;
+        const track = document.getElementById('gate-track');
+        if (track) { track.style.opacity = '0.3'; track.style.pointerEvents = 'none'; }
+        setAlert("SECURITY INCIDENT", true);
+        log(`Security: ${event.breachedName} removed from site.`, 'warn');
+        setTimeout(() => {
+            container.innerHTML = '';
+            if (track) { track.style.opacity = ''; track.style.pointerEvents = ''; }
+            setAlert("Standby for Visitors");
+            spawnVisitor();
+        }, 4000);
     }
 
     function checkSubStageTransition() {
         const current = STAGES[state.currentStageKey];
+        if (state.departureMode) {
+            state.departureMode = false;
+            proceedAfterDepartures();
+            return;
+        }
         const nextKey = current.next;
-        
         if (nextKey && STAGES[nextKey].development) {
             state.currentStageKey = nextKey;
             const nextStage = STAGES[nextKey];
@@ -1135,7 +1277,48 @@
             log(nextStage.alertMsg, 'warn');
             initializePool(nextStage);
             setTimeout(spawnVisitor, 2000);
+        } else if (current.departureRegistry) {
+            initializeDeparturePool(current);
+            if (state.departureMode) spawnVisitor();
         } else {
+            proceedAfterDepartures();
+        }
+    }
+
+    function proceedAfterDepartures() {
+        const s = STAGES[state.currentStageKey];
+        if (s.debrief) showDebrief();
+        else endGame();
+    }
+
+    function showDebrief() {
+        const s = STAGES[state.currentStageKey];
+        state.debriefP1Done = false;
+        state.debriefP2Done = false;
+        const buildPanel = (side) => `
+            <p style="font-size:9px;color:#d1d5db;line-height:1.6;margin-bottom:14px;">${s.debrief[side]}</p>
+            <button onclick="dismissDebrief(${side === 'p1' ? 1 : 2})"
+                style="background:#3b82f6;color:white;padding:8px 24px;border-radius:99px;font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:1px;border:none;cursor:pointer;">
+                PROCEED
+            </button>`;
+        document.getElementById('debrief-content-p1').innerHTML = buildPanel('p1');
+        document.getElementById('debrief-content-p2').innerHTML = buildPanel('p2');
+        document.getElementById('game-interface').style.display = 'none';
+        document.getElementById('screen-debrief').style.display = 'flex';
+    }
+
+    function dismissDebrief(player) {
+        if (player === 1) {
+            state.debriefP1Done = true;
+            document.getElementById('debrief-content-p1').innerHTML =
+                '<div style="font-size:11px;color:#22c55e;font-weight:900;letter-spacing:1px;">✓ READY</div>';
+        } else {
+            state.debriefP2Done = true;
+            document.getElementById('debrief-content-p2').innerHTML =
+                '<div style="font-size:11px;color:#22c55e;font-weight:900;letter-spacing:1px;">✓ READY</div>';
+        }
+        if (state.debriefP1Done && state.debriefP2Done) {
+            document.getElementById('screen-debrief').style.display = 'none';
             endGame();
         }
     }
@@ -1148,7 +1331,7 @@
         card.style.left = 'calc(50% - 50px)';
         card.style.top = '12%';
         const orgText = data.authorised ? data.org : "NOT REGISTERED";
-        const footerText = data.authorised ? "Heritage Authority" : "VISITOR PASS";
+        const footerText = data.authorised ? "Visitor ID Card" : "VISITOR PASS";
         card.innerHTML = `
             <div class="card-inner flipped" id="card-inner">
                 <div class="w-8 h-8 bg-slate-200 rounded mb-1"></div>
@@ -1270,6 +1453,11 @@
                 state.stats.safety++;
                 state.stats.securityBreaches++;
                 log(`SECURITY BREACH: Unauthorized entry!`, 'error');
+                state.securityQueue.push({
+                    breachedName: v.data.name,
+                    breachedRole: v.data.role,
+                    triggerAfter: state.stats.processed + 2
+                });
             } else {
                 // ADD TO SITE LIST ONLY IF AUTHORISED
                 const exists = state.staffOnSite.find(s => s.id === v.data.id);
