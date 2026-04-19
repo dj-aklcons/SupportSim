@@ -494,12 +494,25 @@
         <div style="font-size:11px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;">Heritage Conservation</div>
         <div style="font-size:32px;font-weight:900;color:#f1f5f9;text-transform:uppercase;letter-spacing:-1px;line-height:1;margin-bottom:8px;">Support Team<br>Simulator</div>
         <div style="font-size:10px;color:#64748b;margin-bottom:48px;">Site Operations: Access &amp; Safety Control</div>
-        <div style="display:inline-block;background:#1e293b;border:1px solid #475569;border-radius:99px;padding:10px 28px;color:#94a3b8;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2px;">Tap anywhere to begin</div>
+        <div style="font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:2px;">Tap anywhere to begin</div>
     </div>
     <div style="position:absolute;bottom:16px;right:16px;text-align:right;">
-        <div id="splash-version" style="font-size:9px;color:#475569;font-family:monospace;line-height:1.8;">loading…</div>
+        <div style="font-size:9px;color:#475569;font-family:monospace;">v__HASH__&nbsp;&nbsp;__DATE__</div>
     </div>
 </div>
+<script>
+(function(){
+    var s = document.getElementById('screen-splash');
+    s.addEventListener('click', function(){
+        s.style.opacity = '0';
+        setTimeout(function(){
+            s.style.display = 'none';
+            var t = document.getElementById('screen-title');
+            if (t) t.style.display = 'flex';
+        }, 400);
+    });
+})();
+</script>
 
 <div id="screen-title" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
     <div style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;align-items:center;justify-content:center;padding:16px;">
@@ -1786,18 +1799,6 @@
         else location.reload();
     }
 
-    window.onload = () => {
-        const splash = document.getElementById('screen-splash');
-        document.getElementById('splash-version').textContent =
-            'v' + BUILD_VERSION.hash + '  ·  ' + BUILD_VERSION.date + '  ' + BUILD_VERSION.time;
-        splash.addEventListener('click', () => {
-            splash.style.opacity = '0';
-            setTimeout(() => {
-                splash.style.display = 'none';
-                document.getElementById('screen-title').style.display = 'flex';
-            }, 500);
-        });
-    };
 </script>
 </body>
 </html>
