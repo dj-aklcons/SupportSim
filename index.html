@@ -35,7 +35,7 @@
 
         #event-alert-box {
             position: absolute;
-            bottom: 10px;
+            bottom: 72px;
             right: 10px;
             width: 220px;
             background: rgba(0, 0, 0, 0.85);
@@ -45,6 +45,25 @@
             z-index: 100;
             pointer-events: none;
             transition: all 0.3s;
+        }
+        #critical-alert-box {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 220px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #334155;
+            padding: 10px;
+            border-radius: 4px;
+            z-index: 101;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(240px);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+        }
+        #critical-alert-box.visible {
+            opacity: 1;
+            transform: translateX(0);
         }
         #event-alert-text {
             color: #94a3b8;
@@ -470,6 +489,21 @@
 </head>
 <body>
 
+<div id="screen-splash" style="display:none;position:fixed;inset:0;z-index:20000;background:#0f172a;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity 0.5s ease;" onclick="dismissSplash()">
+    <div style="text-align:center;padding:24px;pointer-events:none;">
+        <div style="font-size:11px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;">Heritage Conservation</div>
+        <h1 style="font-size:32px;font-weight:900;color:#f1f5f9;text-transform:uppercase;letter-spacing:-1px;line-height:1;margin-bottom:8px;">Support Team<br>Simulator</h1>
+        <p style="font-size:10px;color:#475569;margin-bottom:48px;">Site Operations: Access &amp; Safety Control</p>
+        <div style="display:inline-block;background:#1e293b;border:1px solid #334155;border-radius:99px;padding:10px 28px;color:#94a3b8;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2px;">Tap anywhere to begin</div>
+    </div>
+    <div style="position:absolute;bottom:16px;right:16px;text-align:right;pointer-events:none;">
+        <div style="font-size:8px;color:#334155;font-family:monospace;line-height:1.6;">
+            <span id="splash-hash"></span><br>
+            <span id="splash-date"></span>
+        </div>
+    </div>
+</div>
+
 <div id="screen-title" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
     <div style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;align-items:center;justify-content:center;padding:16px;">
         <div style="text-align:center;">
@@ -504,6 +538,15 @@
     <div id="tutorial-content-p2" style="width:100%;max-width:340px;text-align:center;"></div>
 </div>
 
+<div id="screen-debrief" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
+    <div style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;align-items:center;justify-content:center;padding:12px 16px;overflow:hidden;">
+        <div id="debrief-content-p1" style="width:100%;max-width:360px;text-align:center;"></div>
+    </div>
+    <div style="height:50%;display:flex;align-items:center;justify-content:center;padding:12px 16px;overflow:hidden;">
+        <div id="debrief-content-p2" style="width:100%;max-width:360px;text-align:center;"></div>
+    </div>
+</div>
+
 <div id="screen-summary" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
     <div id="summary-p1" style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 16px;overflow:hidden;">
         <div id="summary-content-p1" style="width:100%;max-width:360px;"></div>
@@ -518,6 +561,9 @@
         <div id="event-alert-box">
             <div id="event-alert-text">STANDBY FOR VISITORS</div>
         </div>
+        <div id="critical-alert-box">
+            <div id="critical-alert-text"></div>
+        </div>
         <div id="break-area">
             <div id="break-area-header">
                 <div style="font-size:7px;font-weight:900;letter-spacing:1.5px;color:#60a5fa;text-transform:uppercase;">BREAK AREA</div>
@@ -527,7 +573,11 @@
         </div>
         <div class="gate-slider-track" id="gate-track">
             <span class="track-label label-decline">DECLINE</span>
-            <div id="gate-knob" class="gate-knob"><span id="knob-icon" class="text-xl">🔒</span></div>
+            <div id="gate-knob" class="gate-knob">
+                <img id="knob-icon" src="assets/icons/icon-padlock-locked.png"
+                    style="width:26px;height:26px;object-fit:contain;"
+                    alt="🔒" onerror="this.outerHTML='<span class=\'text-xl\'>🔒</span>'">
+            </div>
             <span class="track-label label-admit">ADMIT</span>
         </div>
         <div id="visitors-container" class="flex flex-col items-center"></div>
@@ -553,27 +603,27 @@
             <div class="flex gap-3 mb-2">
                 <div class="grid grid-cols-2 gap-1.5 shrink-0">
                     <div class="ppe-icon" data-type="mask" id="stock-mask">
-                        <span>😷</span>
+                        <img src="assets/icons/icon-mask.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>😷</span>'">
                         <span id="res-mask" class="res-count">0</span>
                     </div>
                     <div class="ppe-icon" data-type="gloves" id="stock-gloves">
-                        <span>🧤</span>
+                        <img src="assets/icons/icon-gloves.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>🧤</span>'">
                         <span id="res-gloves" class="res-count">0</span>
                     </div>
                     <div class="ppe-icon" data-type="vest" id="stock-vest">
-                        <span>🦺</span>
+                        <img src="assets/icons/icon-vest.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>🦺</span>'">
                         <span id="res-vest" class="res-count">0</span>
                     </div>
                     <div class="ppe-icon" data-type="soaking-pad" id="stock-soaking-pad">
-                        <span>🟦</span>
+                        <img src="assets/icons/icon-soaking-pad.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>🟦</span>'">
                         <span id="res-soaking-pad" class="res-count">∞</span>
                     </div>
                     <div class="ppe-icon" data-type="blotting-paper" id="stock-blotting-paper">
-                        <span>⬜</span>
+                        <img src="assets/icons/icon-blotting-paper.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>⬜</span>'">
                         <span id="res-blotting-paper" class="res-count">∞</span>
                     </div>
                     <div class="ppe-icon" data-type="bucket" id="stock-bucket">
-                        <span>🪣</span>
+                        <img src="assets/icons/icon-bucket.png" style="width:20px;height:20px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>🪣</span>'">
                         <span id="res-bucket" class="res-count">∞</span>
                     </div>
                 </div>
@@ -594,92 +644,122 @@
 </div>
 
 <script>
+    const BUILD_VERSION = { hash: '7fd204b', date: '2026-04-19', time: '03:13 UTC' };
+
     const STAGES = {
-        '1': {
+        ‘1’: {
             title: "A Burst Pipe",
             startTime: "11:39",
-            desc: "The cleaner has reported a leak in the level 2 bathrooms. Water has flooded the floor so we want to control it before it spreads. An RFS is raised, contractors are on their way!",
-            orders: ["Verify Response IDs.", "Gloves mandatory for site entry."],
+            desc: "The cleaner has reported a burst pipe in the Level 2 bathrooms. Water is spreading toward the stacks — we need to contain it before it reaches anything irreplaceable. A Request for Service has been raised with Facilities, and contractors are on their way.",
+            orders: ["Check Visitor ID cards before entry.", "Gloves are mandatory for all site entry."],
             registry: [
-                { id: "v1", name: "Libby Rarian", role: "Librarian Research", org: "Libraries", authorised: true, ppe: ["gloves"], msg: "Has anyone checked the store below?", energy: 100, breakRequired: false },
-                { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I’m here for the pipe repair.", energy: 100, breakRequired: false },
-                { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Something about water?", energy: 100, breakRequired: false }
+                { id: "v1", name: "Libby Rarian", role: "Librarian Research", org: "Libraries", authorised: true, ppe: ["gloves"], msg: "Has anyone checked the heritage material on the shelf below? I’m worried about water damage.", energy: 100, breakRequired: false },
+                { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I’m here for the pipe repair. Which floor is the bathroom on?", energy: 100, breakRequired: false },
+                { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Someone said there’s flooding? I’ve got my gear.", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 0, gloves: 6, vest: 4, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
+            resources: { mask: 0, gloves: 6, vest: 4, ‘soaking-pad’: 100, ‘blotting-paper’: 100, bucket: 10 },
             target: 3,
-            next: '2'
+            next: ‘2’,
+            threats: [‘leak’, ‘flood’],
+            departureRegistry: [
+                { id: "v1", checkoutMsg: "The shelf’s fine — I’ve moved the material just in case. Heading off now." },
+                { id: "v2", checkoutMsg: "Pipe’s fixed. You shouldn’t get any more water through there." },
+                { id: "v3", checkoutMsg: "All sorted. Give us a call if it starts again." }
+            ]
         },
         '2': {
             title: "Air Conditioning Failure",
             startTime: "08:22",
-            desc: "Heritage staff have arrived at work and discovered the storeroom feels unusually warm. An RFS has been raised, and Conservation were called to check out the dataloggers.",
-            orders: ["Masks + Gloves mandatory for mould check.", "Verify Heritage Authority IDs.", "No public access allowed."],
+            desc: "Heritage staff have arrived to find conditions in the storeroom are off — the temperature has been rising overnight and there are concerns about mould risk to the collection. An RFS has been raised, and the Conservation team has been called in to assess.",
+            orders: ["Check Visitor ID cards before entry.", "Masks and Gloves are mandatory for mould assessment.", "No public access permitted."],
             registry: [
-                { id: "v4", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Hope the aircon hasn't been off for a long time!", energy: 70, breakRequired: true },
-                { id: "v5", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I'm gonna check for mould around the place.", energy: 50, breakRequired: true },
-                { id: "v6", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I'll go up to the Plant Room after this.", energy: 100, breakRequired: false },
-                { id: "v7", name: "Unknown", role: "Public", org: "None", authorised: false, ppe: [], msg: "Can I use the toilet that still works?", energy: 100, breakRequired: false }
+                { id: "v31", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "Let me know if you need any supplies. I can go off site.", energy: 80, breakRequired: true, order: 0 },
+                { id: "v4", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Hope the aircon hasn't been off too long — the collection won't cope if humidity goes above 65%.", energy: 70, breakRequired: true },
+                { id: "v5", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I'll set up the dataloggers and check the RH readings.", energy: 50, breakRequired: true },
+                { id: "v6", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I need to get to the Plant Room to check the unit. Could just be a fault.", energy: 100, breakRequired: false },
+                { id: "v7", name: "Unknown", role: "Public", org: "None", authorised: false, ppe: [], msg: "I heard the archive was open today. Can I come in and look around?", energy: 100, breakRequired: false }
             ],
             resources: { mask: 4, gloves: 4, vest: 2, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
-            target: 4,
-            next: '3A'
+            target: 5,
+            next: '3A',
+            threats: ['high-rh', 'mould'],
+            departureRegistry: [
+                { id: "v4",  checkoutMsg: "Conditions are holding steady. I've flagged the readings for monitoring." },
+                { id: "v5",  checkoutMsg: "Dataloggers are set and recording. I'll review the data first thing tomorrow." },
+                { id: "v6",  checkoutMsg: "Unit's running again. Should cool down within the hour." },
+                { id: "v31", checkoutMsg: "Site's all clear now. We're done.", pinLast: true }
+            ]
         },
         '3A': {
             title: "Leaking Water Fountain",
             startTime: "15:00",
-            desc: "A Research Librarian has discovered water leaking in the Upper Basement. It's coming from the Ground Floor water fountain, so we'll need contractors upstairs, and a check for mould downstairs.",
-            orders: ["Mould Hazard: Full Respirators + Gloves + Vest.", "Ensure staff energy levels stay high.", "Monitor Salvage Team closely."],
+            desc: "A Research Librarian has discovered water pooling in the Upper Basement — traced to a cracked water fountain on the Ground Floor above. Contractors are heading upstairs to cut the supply while Conservation staff investigate below for water damage and potential mould.",
+            orders: ["Check Visitor ID cards before entry.", "Mould Hazard: Gloves + Vest mandatory.", "Ensure staff energy levels stay high — manage breaks.", "No unauthorised access under any circumstances."],
             registry: [
-                { id: "v8", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Not again!", energy: 100, breakRequired: true },
-                { id: "v9", name: "Konsa Vazion", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Are the plumbers here yet?", energy: 80, breakRequired: true },
-                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I've got an RH sensor.", energy: 100, breakRequired: true },
-                { id: "v11", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "We came as soon as we could", energy: 100, breakRequired: false },
-                { id: "v12", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I've turned off the mains.", energy: 100, breakRequired: false },
-                { id: "v13", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: [], msg: "Anyone found any mould?", energy: 100, breakRequired: false },
-                { id: "v14", name: "Sal Vager", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Here's the Disaster kit if we need it.", energy: 60, breakRequired: true },
-                { id: "v15", name: "Annie de Break", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Those are Heritage serials!", energy: 20, breakRequired: true },
-                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Need me to order more supplies?", energy: 50, breakRequired: true },
-                { id: "v17", name: "Reporter", role: "Press", org: "The CBD Seer", authorised: false, ppe: [], msg: "Anything valuable in there?", energy: 100, breakRequired: false }
+                { id: "v8",  name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Not again! Please tell me the water hasn't reached the heritage serials.", energy: 100, breakRequired: true },
+                { id: "v9",  name: "Konsa Vazion", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Are the contractors here yet? We need that fountain turned off fast.", energy: 80, breakRequired: true },
+                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves"], msg: "I've got an RH sensor — I'll check moisture levels in the basement.", energy: 100, breakRequired: true },
+                { id: "v11", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "We came as soon as we could. Where's the water coming from?", energy: 100, breakRequired: false },
+                { id: "v12", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["vest"], msg: "I've turned off the mains. That should stop the flow.", energy: 100, breakRequired: false },
+                { id: "v13", name: "Contractor", role: "HVAC Engineer", org: "Facilities", authorised: true, ppe: [], msg: "I'm checking the mechanical room while I'm here — routine inspection.", energy: 100, breakRequired: false },
+                { id: "v14", name: "Sal Vager", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I've brought the disaster kit — buckets, soaking pads, the lot.", energy: 60, breakRequired: true },
+                { id: "v15", name: "Annie de Break", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Those are Heritage serials down there! We need to get them out now!", energy: 20, breakRequired: true },
+                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Need me to order more supplies? I can do a run if we're running low.", energy: 50, breakRequired: true },
+                { id: "v17", name: "Reporter", role: "Press", org: "The CBD Seer", authorised: false, ppe: [], msg: "Anything valuable been damaged in there? Our readers would love to know.", energy: 100, breakRequired: false }
             ],
             resources: { mask: 10, gloves: 10, vest: 10, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
             target: 10,
             next: '3B'
         },
-        '3B': {
+        ‘3B’: {
             development: true,
-            alertMsg: "EVENT DEVELOPMENT - MOULD DISCOVERED!",
+            alertMsg: "MOULD DISCOVERED — Full PPE now required. Masks mandatory for all on-site personnel.",
             registry: [
-                { id: "v18", name: "Dizzy Astrous", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Uh Oh, looks like we found mould!", energy: 20, breakRequired: true },
-                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got a kit for taking a mould sample", energy: 10, breakRequired: true },
-                { id: "v20", name: "Klee Anup", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "My first mould outbreak!!", energy: 30, breakRequired: true },
-                { id: "v21", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Leak’s stopped but we’ve found more downstairs", energy: 100, breakRequired: false },
-                { id: "v22", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Where do you want these soaking pads?", energy: 100, breakRequired: false },
-                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "I’m gonna change the air-con filters now", energy: 100, breakRequired: false },
-                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve been called in - what’s happening?", energy: 5, breakRequired: true },
-                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Do you need a break?!", energy: 20, breakRequired: true },
-                { id: "v26", name: "Preppe de Saster", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got some food supplies for the team", energy: 50, breakRequired: true },
-                { id: "v27", name: "Mayor", role: "Regional", org: "Council", authorised: false, ppe: [], msg: "I need to check everything’s done right", energy: 100, breakRequired: false }
+                { id: "v18", name: "Dizzy Astrous", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Mould confirmed in the lower stacks. We need to contain it immediately.", energy: 20, breakRequired: true },
+                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got swabs for sampling — we need to document how far it’s spread.", energy: 10, breakRequired: true },
+                { id: "v20", name: "Klee Anup", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "This is my first mould outbreak — what’s the protocol?", energy: 30, breakRequired: true },
+                { id: "v21", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["mask", "vest"], msg: "Leak’s fixed upstairs, but we’ve found damp patches in the basement wall.", energy: 100, breakRequired: false },
+                { id: "v22", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["mask", "vest"], msg: "Where do you want these soaking pads? I’ve got a full pallet outside.", energy: 100, breakRequired: false },
+                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: ["mask"], msg: "I’m swapping out the air filters — mould spores spread through the ducts.", energy: 100, breakRequired: false },
+                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve been called in for emergency salvage. What’s the priority?", energy: 5, breakRequired: true },
+                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "The blotting paper is going to come in handy for the wet items.", energy: 20, breakRequired: true },
+                { id: "v26", name: "Preppe de Saster", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got food and extra supplies for the team — where should I set up?", energy: 50, breakRequired: true },
+                { id: "v27", name: "Mayor", role: "Regional", org: "Council", authorised: false, ppe: ["mask"], msg: "I’ve decided to do a site visit. It’s election year and I don’t need this.", energy: 100, breakRequired: false }
             ],
             target: 10,
-            next: '3C'
+            next: ‘3C’
         },
-        '3C': {
+        ‘3C’: {
             development: true,
-            alertMsg: "EVENT DEVELOPMENT - DISASTER STABILISED!",
+            title: "Disaster Response Complete",
+            alertMsg: "DISASTER STABILISED — Begin site pack-down.",
             registry: [
-                { id: "v8", name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask"], msg: "Can I get some more masks?", energy: -1, breakRequired: true },
-                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Can you order more freezer bags?", energy: -1, breakRequired: true },
-                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I think we’ll need more trolleys down here", energy: -1, breakRequired: true },
-                { id: "v28", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: [], msg: "We’ve got more soaking pads", energy: 100, breakRequired: false },
-                { id: "v29", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Where can I park my car?", energy: 100, breakRequired: false },
-                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "I’m gonna change the air-con filters now", energy: 100, breakRequired: false },
-                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: [], msg: "Anything new going on?", energy: -1, breakRequired: true },
-                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: [], msg: "Did I see the Mayor here?!", energy: -1, breakRequired: true },
-                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "Do you think we need a freezer container?", energy: -1, breakRequired: true },
-                { id: "v30", name: "Curator", role: "Heritage", org: "Libraries", authorised: false, ppe: [], msg: "Can I just grab my favourite serial?", energy: 100, breakRequired: false }
+                { id: "v8",  name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask"], msg: "Mould containment is holding. The heritage items have been moved to safe storage.", energy: -1, breakRequired: true },
+                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Sampling is done — remediation can begin once the area is clear.", energy: -1, breakRequired: true },
+                { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "RH is dropping. The dehumidifiers are doing their job.", energy: -1, breakRequired: true },
+                { id: "v28", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: [], msg: "We’ve brought extra soaking pads if you still need them.", energy: 100, breakRequired: false },
+                { id: "v29", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Is there somewhere I can park? I’ve got equipment to unload.", energy: 100, breakRequired: false },
+                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "New filters are in — air quality should improve over the next few hours.", energy: 100, breakRequired: false },
+                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: [], msg: "Salvage priorities are handled. Team’s packing up the kit now.", energy: -1, breakRequired: true },
+                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: [], msg: "Did I see the Mayor on the CCTV earlier? Please tell me they didn’t get past the desk.", energy: -1, breakRequired: true },
+                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "I think we’re through the worst of it. What supplies do we still need before pack-down?", energy: -1, breakRequired: true },
+                { id: "v30", name: "Curator", role: "Heritage", org: "Libraries", authorised: false, ppe: [], msg: "I just need to check on the Tōtara Street serials — they’re completely irreplaceable!", energy: 100, breakRequired: false }
             ],
             target: 10,
-            next: null
+            next: null,
+            threats: ['leak', 'flood', 'mould', 'theft'],
+            departureRegistry: [
+                { id: "v8",  checkoutMsg: "Heritage items are secured and documented. Tough day — great response." },
+                { id: "v19", checkoutMsg: "Mould report goes to the Manager first thing tomorrow. Thanks everyone." },
+                { id: "v10", checkoutMsg: "Sensors are logging and uploading. Conditions are stable." },
+                { id: "v24", checkoutMsg: "Salvage kit’s repacked and signed off. See you at the debrief." },
+                { id: "v25", checkoutMsg: "What a day. Hope we don’t have to do this again too soon." },
+                { id: "v16", checkoutMsg: "Site’s all clear. Good work, team — we’re wrapped up.", pinLast: true }
+            ],
+            debrief: {
+                p1: "From a leaking pipe to a full mould containment — today’s response team held the line. Every person who came through that gate was your call. The site stayed secure, the collection was protected, and the team made it home.",
+                p2: "Three emergencies. One shift. The registration desk kept the team equipped, safe, and accounted for from start to finish. ID cards checked, PPE confirmed, supplies dispatched. Without the desk, no one gets on site — and today, that mattered."
+            }
         }
     };
 
@@ -725,6 +805,89 @@
         }
     };
 
+    const ASSETS = {
+        avatars:   'assets/avatars/',
+        idCards:   'assets/id-cards/',
+        logos:     'assets/logos/',
+        icons:     'assets/icons/'
+    };
+
+    const AVATAR_MAP = {
+        v1:  'avatar-libby-rarian.png',
+        v2:  'avatar-plumber-1.png',
+        v3:  'avatar-plumber-2.png',
+        v4:  'avatar-connie-servator.png',
+        v5:  'avatar-tek-nizian.png',
+        v6:  'avatar-hvac-engineer.png',
+        v7:  'avatar-public.png',
+        v8:  'avatar-connie-servator.png',
+        v9:  'avatar-konsa-vazion.png',
+        v10: 'avatar-tek-nizian.png',
+        v11: 'avatar-plumber-1.png',
+        v12: 'avatar-plumber-2.png',
+        v13: 'avatar-hvac-engineer.png',
+        v14: 'avatar-sal-vager.png',
+        v15: 'avatar-annie-de-break.png',
+        v16: 'avatar-sue-portman.png',
+        v17: 'avatar-reporter.png',
+        v18: 'avatar-dizzy-astrous.png',
+        v19: 'avatar-blotte-papier.png',
+        v20: 'avatar-klee-anup.png',
+        v21: 'avatar-general-1.png',
+        v22: 'avatar-general-2.png',
+        v23: 'avatar-hvac-tech.png',
+        v24: 'avatar-frasier-bags.png',
+        v25: 'avatar-plaz-tic-baggins.png',
+        v26: 'avatar-preppe-de-saster.png',
+        v27: 'avatar-mayor.png',
+        v28: 'avatar-general-1.png',
+        v29: 'avatar-general-2.png',
+        v30: 'avatar-curator.png',
+        v31: 'avatar-sue-portman.png',
+        security: 'avatar-security.png'
+    };
+
+    const ID_CARD_MAP = {
+        'Librarian Research':  'id-card-libraries.png',
+        'Conservator':         'id-card-libraries.png',
+        'Conservation Tech':   'id-card-libraries.png',
+        'Support Team':        'id-card-libraries.png',
+        'Salvage Team Lead':   'id-card-libraries.png',
+        'Salvage Team':        'id-card-libraries.png',
+        'Heritage':            'id-card-libraries.png',
+        'Regional':            'id-card-libraries.png',
+        'Plumber':             'id-card-plumber.png',
+        'HVAC Engineer':       'id-card-hvac.png',
+        'HVAC Tech':           'id-card-hvac.png',
+        'General':             'id-card-general-contractor.png',
+        'Public':              'id-card-visitor-pass.png',
+        'Press':               'id-card-press.png'
+    };
+
+    const PPE_EMOJI = {
+        mask: '😷', gloves: '🧤', vest: '🦺',
+        'soaking-pad': '🟦', 'blotting-paper': '⬜', bucket: '🪣'
+    };
+
+    function avatarImg(id, sizePx, rounded = true) {
+        const file = AVATAR_MAP[id];
+        const radius = rounded ? '50%' : '4px';
+        const fallback = id === 'security' ? '🛡️' : '👤';
+        if (!file) return `<span style="font-size:${Math.round(sizePx * 0.55)}px;line-height:1;">${fallback}</span>`;
+        return `<img src="${ASSETS.avatars}${file}"
+            style="width:${sizePx}px;height:${sizePx}px;object-fit:cover;border-radius:${radius};display:block;"
+            alt="" onerror="this.outerHTML='<span style=\\'font-size:${Math.round(sizePx * 0.55)}px;line-height:1;\\'>${fallback}</span>'">`;
+    }
+
+    function logoImg(role, sizePx, extraStyle = '') {
+        const cardFile = ID_CARD_MAP[role];
+        if (!cardFile) return '';
+        const file = cardFile.replace('id-card-', 'logo-');
+        return `<img src="${ASSETS.logos}${file}"
+            style="width:${sizePx}px;height:${sizePx}px;object-fit:contain;flex-shrink:0;${extraStyle}"
+            alt="" onerror="this.style.display='none'">`;
+    }
+
     let state = {
         currentStageKey: '1',
         resources: {},
@@ -734,19 +897,38 @@
         activeCard: null,
         gameTimeMinutes: 0,
         timerInterval: null,
-        staffOnSite: [], // ONLY those admitted and authorised
+        staffOnSite: [],
         pool: [],
         suppliesQueue: [],
         tutorialP1Done: false,
-        tutorialP2Done: false
+        tutorialP2Done: false,
+        departureMode: false,
+        securityQueue: [],
+        debriefP1Done: false,
+        debriefP2Done: false
     };
 
-    function setAlert(text, isCritical = false) {
-        const box = document.getElementById('event-alert-box');
-        const display = document.getElementById('event-alert-text');
-        display.innerText = text;
-        if (isCritical) box.classList.add('alert-flash-red');
-        else box.classList.remove('alert-flash-red');
+    function setAlert(text) {
+        document.getElementById('event-alert-text').innerText = text;
+        document.getElementById('event-alert-box').classList.remove('alert-flash-red');
+    }
+
+    let _criticalDismissTimer = null;
+
+    function setCriticalAlert(text, autoDismissMs = 0) {
+        if (_criticalDismissTimer) { clearTimeout(_criticalDismissTimer); _criticalDismissTimer = null; }
+        const box = document.getElementById('critical-alert-box');
+        document.getElementById('critical-alert-text').innerText = text;
+        box.classList.add('visible', 'alert-flash-red');
+        if (autoDismissMs > 0) {
+            _criticalDismissTimer = setTimeout(dismissCriticalAlert, autoDismissMs);
+        }
+    }
+
+    function dismissCriticalAlert() {
+        _criticalDismissTimer = null;
+        const box = document.getElementById('critical-alert-box');
+        box.classList.remove('visible', 'alert-flash-red');
     }
 
     function formatGameTime(totalMinutes) {
@@ -809,6 +991,8 @@
         if (s.resources) state.resources = { ...s.resources };
         state.stats = { processed: 0, safety: 0, unauthorizedDenied: 0, securityBreaches: 0, ppeViolations: 0, authorisedAdmitted: 0 };
         state.suppliesQueue = [];
+        state.securityQueue = [];
+        state.departureMode = false;
 
         initializePool(s);
 
@@ -875,6 +1059,8 @@
     }
 
     function beginPlay() {
+        const track = document.getElementById('gate-track');
+        if (track) track.style.display = '';
         if (state.timerInterval) clearInterval(state.timerInterval);
         state.timerInterval = setInterval(() => {
             state.gameTimeMinutes += 1;
@@ -902,9 +1088,6 @@
     }
 
     function initializePool(s) {
-        const shuffle = (array) => array.sort(() => Math.random() - 0.5);
-        
-        // Handle energy inheritance for 3B/3C
         const rawPool = s.registry.map(p => {
             const existing = state.staffOnSite.find(e => e.id === p.id);
             if (existing && p.energy === -1) {
@@ -912,8 +1095,33 @@
             }
             return { ...p, energy: p.energy === -1 ? 100 : p.energy, admitted: false };
         });
+        const fixed = rawPool.filter(p => p.order !== undefined).sort((a, b) => a.order - b.order);
+        const free  = rawPool.filter(p => p.order === undefined).sort(() => Math.random() - 0.5);
+        const pool  = Array(rawPool.length).fill(null);
+        fixed.forEach(p => {
+            const idx = Math.min(p.order, pool.length - 1);
+            if (pool[idx] === null) { pool[idx] = p; }
+            else { let i = idx + 1; while (i < pool.length && pool[i] !== null) i++; if (i < pool.length) pool[i] = p; }
+        });
+        let fi = 0;
+        for (let i = 0; i < pool.length; i++) { if (pool[i] === null) pool[i] = free[fi++]; }
+        state.pool = pool.filter(Boolean);
+    }
 
-        state.pool = shuffle([...rawPool]);
+    function initializeDeparturePool(s) {
+        const rawPool = (s.departureRegistry || []).map(dep => {
+            const person = state.staffOnSite.find(p => p.id === dep.id && !p.exitedOverwork);
+            if (!person) return null;
+            return { ...person, msg: dep.checkoutMsg, pinFirst: dep.pinFirst || false, pinLast: dep.pinLast || false, isDeparture: true };
+        }).filter(Boolean);
+        if (rawPool.length === 0) { proceedAfterDepartures(); return; }
+        const first  = rawPool.filter(p => p.pinFirst);
+        const last   = rawPool.filter(p => p.pinLast);
+        const middle = rawPool.filter(p => !p.pinFirst && !p.pinLast).sort(() => Math.random() - 0.5);
+        state.pool = [...first, ...middle, ...last];
+        state.departureMode = true;
+        setAlert("SITE PACK-DOWN — Check out departing personnel");
+        updateRegistryUI();
     }
 
     function checkCriticalAlert() {
@@ -921,9 +1129,9 @@
             p => p.breakRequired && !p.onBreak && !p.onSupplyRun && !p.exitedOverwork && p.energy <= 20 && p.energy > 0
         );
         if (critical.length > 0) {
-            setAlert(`ENERGY CRITICAL: ${critical.map(p => p.name.split(' ')[0]).join(', ')}`, true);
+            setCriticalAlert(`ENERGY CRITICAL: ${critical.map(p => p.name.split(' ')[0]).join(', ')}`);
         } else {
-            document.getElementById('event-alert-box').classList.remove('alert-flash-red');
+            dismissCriticalAlert();
         }
     }
 
@@ -938,7 +1146,7 @@
         }
 
         const stage = state.currentStageKey;
-        const showOnsite = stage !== '1';
+        const showOnsite = stage !== '1' || state.departureMode;
         const showBreak  = stage !== '1' && stage !== '2';
         const showEnergy = stage !== '1';
         const colOnsite = document.getElementById('col-onsite');
@@ -964,9 +1172,12 @@
             return `
             <div class="registry-row ${rowClass}" id="reg-${p.id}">
                 <div class="flex items-center justify-between">
-                    <div class="flex-grow">
-                        <b class="text-white">${p.name}</b><br/>
-                        <span class="opacity-50 text-[7px] uppercase">${p.role}</span>
+                    <div class="flex-grow" style="display:flex;align-items:center;gap:5px;min-width:0;">
+                        ${logoImg(p.role, 14)}
+                        <div style="min-width:0;">
+                            <b class="text-white">${p.name}</b><br/>
+                            <span class="opacity-50 text-[7px] uppercase">${p.role}</span>
+                        </div>
                     </div>
                     ${checksDiv}
                 </div>
@@ -981,10 +1192,45 @@
         if (!isChecked) {
             const person = state.staffOnSite.find(p => p.id === id);
             if (!person || person.exitedOverwork || person.onSupplyRun) return;
-            const checkbox = document.querySelector(`#reg-${id} .registry-check`);
-            if (checkbox) checkbox.checked = true;
-            showSuppliesPopup(person);
+            if (person.checkoutMsg) {
+                if (!state.activeVisitor || state.activeVisitor.data.id !== id) {
+                    const checkbox = document.querySelector(`#reg-${id} .registry-check`);
+                    if (checkbox) checkbox.checked = true;
+                    return;
+                }
+                state.staffOnSite = state.staffOnSite.filter(p => p.id !== id);
+                log(`${person.name} has left the site.`);
+                updateRegistryUI();
+                updateBreakAreaUI();
+                completeDeparture();
+            } else {
+                const checkbox = document.querySelector(`#reg-${id} .registry-check`);
+                if (checkbox) checkbox.checked = true;
+                showSuppliesPopup(person);
+            }
         }
+    }
+
+    function completeDeparture() {
+        const v = state.activeVisitor;
+        if (v) {
+            v.bubble.style.opacity = '0';
+            v.el.style.transform = 'translateY(-120px)';
+            setTimeout(() => { v.el.style.transform = 'translateY(-120px) translateX(300px)'; v.el.style.opacity = '0'; }, 600);
+            if (state.activeCard) {
+                state.activeCard.classList.add('slotted-exit');
+                const cardRef = state.activeCard;
+                setTimeout(() => cardRef.remove(), 1100);
+                state.activeCard = null;
+            }
+            state.activeVisitor = null;
+        } else {
+            document.getElementById('visitors-container').innerHTML = '';
+        }
+        state.isIdScanned = false;
+        resetSlider();
+        setAlert("SITE PACK-DOWN — Check out departing personnel");
+        setTimeout(spawnVisitor, 2000);
     }
 
     function showSuppliesPopup(person) {
@@ -1087,7 +1333,7 @@
                         <svg class="energy-progress-svg" width="44" height="44">
                             <circle cx="22" cy="22" r="20" fill="transparent" stroke="#22c55e" stroke-width="4" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" style="transition: stroke-dashoffset 0.5s ease;"/>
                         </svg>
-                        <span class="text-lg">👤</span>
+                        ${avatarImg(p.id, 30)}
                     </div>
                     <span class="text-[8px] font-bold mt-1 text-slate-400">${p.name.split(' ')[0]}</span>
                 </div>`;
@@ -1100,42 +1346,128 @@
     }
 
     function spawnVisitor() {
+        const secEvent = state.securityQueue.find(e => e.triggerAfter <= state.stats.processed);
+        if (secEvent) {
+            state.securityQueue = state.securityQueue.filter(e => e !== secEvent);
+            spawnSecurityVisitor(secEvent);
+            return;
+        }
         if (state.pool.length === 0) {
             checkSubStageTransition();
             return;
         }
-        
         const data = state.pool.shift();
         const container = document.getElementById('visitors-container');
         container.innerHTML = '';
+        const track = document.getElementById('gate-track');
+        if (track) track.style.display = state.departureMode ? 'none' : '';
         const visitor = document.createElement('div');
         visitor.className = 'visitor';
-        visitor.innerHTML = '👤';
-        visitor.onclick = () => { createIDCard(data, visitor); setAlert("Visitor Arrived - Check Status"); };
-        
+        visitor.innerHTML = avatarImg(data.id, 85);
+        visitor.onclick = () => {
+            createIDCard(data, visitor);
+            setAlert(state.departureMode ? "Personnel Checking Out — Uncheck ONSITE to confirm" : "Visitor Arrived — Check Status");
+        };
         const bubble = document.createElement('div');
         bubble.className = 'speech-bubble';
         bubble.innerText = data.msg;
-        
-        container.appendChild(bubble); 
+        container.appendChild(bubble);
         container.appendChild(visitor);
         state.activeVisitor = { el: visitor, bubble, data, givenPPE: [] };
         state.isIdScanned = false;
         resetSlider();
+        if (state.departureMode) {
+            const person = state.staffOnSite.find(p => p.id === data.id);
+            if (person) person.checkoutMsg = data.msg;
+            updateRegistryUI();
+        }
+    }
+
+    function spawnSecurityVisitor(event) {
+        const container = document.getElementById('visitors-container');
+        container.innerHTML = '';
+        const visitor = document.createElement('div');
+        visitor.className = 'visitor';
+        visitor.style.background = '#ef4444';
+        visitor.innerHTML = avatarImg('security', 85);
+        const bubble = document.createElement('div');
+        bubble.className = 'speech-bubble';
+        bubble.innerText = `You let ${event.breachedName} (${event.breachedRole}) in! I've asked them to leave the site.`;
+        container.appendChild(bubble);
+        container.appendChild(visitor);
+        state.activeVisitor = null;
+        state.isIdScanned = false;
+        const track = document.getElementById('gate-track');
+        if (track) { track.style.opacity = '0.3'; track.style.pointerEvents = 'none'; }
+        setCriticalAlert("SECURITY INCIDENT");
+        log(`Security: ${event.breachedName} removed from site.`, 'warn');
+        setTimeout(() => {
+            container.innerHTML = '';
+            if (track) { track.style.opacity = ''; track.style.pointerEvents = ''; }
+            dismissCriticalAlert();
+            setAlert("Standby for Visitors");
+            spawnVisitor();
+        }, 4000);
     }
 
     function checkSubStageTransition() {
         const current = STAGES[state.currentStageKey];
+        if (state.departureMode) {
+            state.departureMode = false;
+            proceedAfterDepartures();
+            return;
+        }
         const nextKey = current.next;
-        
         if (nextKey && STAGES[nextKey].development) {
             state.currentStageKey = nextKey;
             const nextStage = STAGES[nextKey];
-            setAlert(nextStage.alertMsg, true);
+            setAlert(nextStage.alertMsg);
+            setCriticalAlert(nextStage.alertMsg, 5000);
             log(nextStage.alertMsg, 'warn');
             initializePool(nextStage);
             setTimeout(spawnVisitor, 2000);
+        } else if (current.departureRegistry) {
+            initializeDeparturePool(current);
+            if (state.departureMode) spawnVisitor();
         } else {
+            proceedAfterDepartures();
+        }
+    }
+
+    function proceedAfterDepartures() {
+        const s = STAGES[state.currentStageKey];
+        if (s.debrief) showDebrief();
+        else endGame();
+    }
+
+    function showDebrief() {
+        const s = STAGES[state.currentStageKey];
+        state.debriefP1Done = false;
+        state.debriefP2Done = false;
+        const buildPanel = (side) => `
+            <p style="font-size:9px;color:#d1d5db;line-height:1.6;margin-bottom:14px;">${s.debrief[side]}</p>
+            <button onclick="dismissDebrief(${side === 'p1' ? 1 : 2})"
+                style="background:#3b82f6;color:white;padding:8px 24px;border-radius:99px;font-weight:800;font-size:9px;text-transform:uppercase;letter-spacing:1px;border:none;cursor:pointer;">
+                PROCEED
+            </button>`;
+        document.getElementById('debrief-content-p1').innerHTML = buildPanel('p1');
+        document.getElementById('debrief-content-p2').innerHTML = buildPanel('p2');
+        document.getElementById('game-interface').style.display = 'none';
+        document.getElementById('screen-debrief').style.display = 'flex';
+    }
+
+    function dismissDebrief(player) {
+        if (player === 1) {
+            state.debriefP1Done = true;
+            document.getElementById('debrief-content-p1').innerHTML =
+                '<div style="font-size:11px;color:#22c55e;font-weight:900;letter-spacing:1px;">✓ READY</div>';
+        } else {
+            state.debriefP2Done = true;
+            document.getElementById('debrief-content-p2').innerHTML =
+                '<div style="font-size:11px;color:#22c55e;font-weight:900;letter-spacing:1px;">✓ READY</div>';
+        }
+        if (state.debriefP1Done && state.debriefP2Done) {
+            document.getElementById('screen-debrief').style.display = 'none';
             endGame();
         }
     }
@@ -1148,13 +1480,27 @@
         card.style.left = 'calc(50% - 50px)';
         card.style.top = '12%';
         const orgText = data.authorised ? data.org : "NOT REGISTERED";
-        const footerText = data.authorised ? "Heritage Authority" : "VISITOR PASS";
+        const footerText = data.authorised ? "Visitor ID Card" : "VISITOR PASS";
+        const cardFile = ID_CARD_MAP[data.role] || 'id-card-visitor-pass.png';
+        const avatarFile = AVATAR_MAP[data.id] || null;
         card.innerHTML = `
-            <div class="card-inner flipped" id="card-inner">
-                <div class="w-8 h-8 bg-slate-200 rounded mb-1"></div>
-                <b class="text-[9px] uppercase">${data.name}</b>
-                <span class="text-[7px] opacity-60">${orgText}</span>
-                <div class="mt-2 pt-1 border-t w-full text-[5px] text-center uppercase tracking-widest">${footerText}</div>
+            <div class="card-inner flipped" id="card-inner" style="position:relative;overflow:hidden;padding:0;">
+                <img src="${ASSETS.idCards}${cardFile}"
+                    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
+                    alt="" onerror="this.style.display='none'">
+                <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:8px 6px;gap:3px;">
+                    <div style="position:relative;display:inline-block;flex-shrink:0;">
+                        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:#e2e8f0;">
+                            ${avatarFile
+                                ? `<img src="${ASSETS.avatars}${avatarFile}" style="width:100%;height:100%;object-fit:cover;" alt="" onerror="this.outerHTML='<span style=\\'font-size:20px;line-height:36px;display:block;text-align:center;\\'>👤</span>'">`
+                                : `<span style="font-size:20px;line-height:36px;display:block;text-align:center;">👤</span>`}
+                        </div>
+                        ${logoImg(data.role, 14, 'position:absolute;top:-2px;right:-2px;border-radius:50%;background:white;padding:1px;')}
+                    </div>
+                    <b style="font-size:8px;text-transform:uppercase;text-align:center;line-height:1.2;color:#1e293b;">${data.name}</b>
+                    <span style="font-size:6px;color:#475569;text-align:center;">${orgText}</span>
+                    <div style="margin-top:4px;padding-top:3px;border-top:1px solid #cbd5e1;width:100%;font-size:5px;text-align:center;text-transform:uppercase;letter-spacing:1.5px;color:#64748b;">${footerText}</div>
+                </div>
             </div>`;
         document.body.appendChild(card);
         initDrag(card, 'ID');
@@ -1170,7 +1516,7 @@
                 updateResUI();
                 const dragEl = document.createElement('div');
                 dragEl.className = 'ppe-drag';
-                dragEl.innerHTML = icon.querySelector('span').innerText;
+                dragEl.innerHTML = `<img src="${ASSETS.icons}icon-${type}.png" style="width:26px;height:26px;object-fit:contain;" alt="" onerror="this.outerHTML='<span>${PPE_EMOJI[type] || '📦'}</span>'">`;
                 dragEl.dataset.type = type;
                 dragEl.style.left = (e.clientX - 25) + 'px';
                 dragEl.style.top = (e.clientY - 25) + 'px';
@@ -1213,7 +1559,9 @@
                     el.classList.add('slotted-card');
                     el.querySelector('#card-inner').classList.remove('flipped');
                     document.getElementById('gate-track').style.borderColor = '#fbbf24';
-                    document.getElementById('knob-icon').innerText = '🔓';
+                    const ki = document.getElementById('knob-icon');
+                    if (ki && ki.tagName === 'IMG') { ki.src = 'assets/icons/icon-padlock-unlocked.png'; ki.alt = '🔓'; }
+                    else if (ki) ki.innerText = '🔓';
                     log(`ID Logged: ${state.activeVisitor.data.name}`);
                     
                     const req = state.activeVisitor.data.ppe || [];
@@ -1270,6 +1618,11 @@
                 state.stats.safety++;
                 state.stats.securityBreaches++;
                 log(`SECURITY BREACH: Unauthorized entry!`, 'error');
+                state.securityQueue.push({
+                    breachedName: v.data.name,
+                    breachedRole: v.data.role,
+                    triggerAfter: state.stats.processed + 2
+                });
             } else {
                 // ADD TO SITE LIST ONLY IF AUTHORISED
                 const exists = state.staffOnSite.find(s => s.id === v.data.id);
@@ -1339,7 +1692,9 @@
         const knob = document.getElementById('gate-knob');
         knob.style.left = '50%'; knob.style.transform = 'translateX(-50%)';
         document.getElementById('gate-track').style.borderColor = '#334155';
-        document.getElementById('knob-icon').innerText = state.isIdScanned ? '🔓' : '🔒';
+        const ki = document.getElementById('knob-icon');
+        if (ki && ki.tagName === 'IMG') { ki.src = `assets/icons/icon-padlock-${state.isIdScanned ? 'unlocked' : 'locked'}.png`; ki.alt = state.isIdScanned ? '🔓' : '🔒'; }
+        else if (ki) ki.innerText = state.isIdScanned ? '🔓' : '🔒';
     }
 
     function endGame() {
@@ -1392,9 +1747,22 @@
         const isFinal = !STAGES[state.currentStageKey].next;
         const btnLabel = isFinal ? 'ALL SHIFTS COMPLETE' : 'NEXT SHIFT';
 
+        const stageThreats = STAGES[state.currentStageKey].threats || [];
+        const threatsHTML = stageThreats.length === 0 ? '' : `
+            <div style="display:flex;gap:8px;justify-content:center;align-items:flex-end;margin-bottom:8px;">
+                ${stageThreats.map(t => `
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <img src="${ASSETS.icons}threat-${t}.png"
+                            style="width:28px;height:28px;object-fit:contain;"
+                            alt="${t}" onerror="this.style.display='none'">
+                        <span style="font-size:6px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;">${t.replace('-',' ')}</span>
+                    </div>`).join('')}
+            </div>`;
+
         const summaryHTML = `
             <p style="font-size:9px;font-weight:900;letter-spacing:2px;color:#64748b;text-transform:uppercase;margin-bottom:5px;text-align:center;">
                 Shift Summary — ${STAGES[state.currentStageKey].title || 'Shift'}</p>
+            ${threatsHTML}
             <div style="margin-bottom:5px;">
                 ${row('Registration Accuracy', regPct + '%',                          pctColor(regPct),          regNote)}
                 ${row('Safety Compliance',     safePct + '%',                         pctColor(safePct),         safeNote)}
@@ -1421,7 +1789,21 @@
         else location.reload();
     }
 
-    window.onload = () => document.getElementById('screen-title').style.display = 'flex';
+    function dismissSplash() {
+        const el = document.getElementById('screen-splash');
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.style.display = 'none';
+            document.getElementById('screen-title').style.display = 'flex';
+        }, 500);
+    }
+
+    window.onload = () => {
+        const el = document.getElementById('screen-splash');
+        document.getElementById('splash-hash').textContent = 'v' + BUILD_VERSION.hash;
+        document.getElementById('splash-date').textContent = BUILD_VERSION.date + ' · ' + BUILD_VERSION.time;
+        el.style.display = 'flex';
+    };
 </script>
 </body>
 </html>
