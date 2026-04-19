@@ -1390,6 +1390,7 @@
             const person = state.staffOnSite.find(p => p.id === data.id);
             if (person) person.checkoutMsg = data.msg;
             updateRegistryUI();
+            setAlert(`${data.name} checking out — P2: uncheck ONSITE to confirm`);
         }
     }
 
@@ -1447,6 +1448,7 @@
     function proceedAfterDepartures() {
         const s = STAGES[state.currentStageKey];
         if (s.debrief) showDebrief();
+        else if (s.next) showStageIntro(s.next);
         else endGame();
     }
 
