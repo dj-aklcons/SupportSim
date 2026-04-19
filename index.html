@@ -46,6 +46,25 @@
             pointer-events: none;
             transition: all 0.3s;
         }
+        #critical-alert-box {
+            position: absolute;
+            bottom: 78px;
+            right: 10px;
+            width: 220px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #334155;
+            padding: 10px;
+            border-radius: 4px;
+            z-index: 101;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(240px);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+        }
+        #critical-alert-box.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
         #event-alert-text {
             color: #94a3b8;
             font-size: 10px;
@@ -527,6 +546,9 @@
         <div id="event-alert-box">
             <div id="event-alert-text">STANDBY FOR VISITORS</div>
         </div>
+        <div id="critical-alert-box">
+            <div id="critical-alert-text"></div>
+        </div>
         <div id="break-area">
             <div id="break-area-header">
                 <div style="font-size:7px;font-weight:900;letter-spacing:1.5px;color:#60a5fa;text-transform:uppercase;">BREAK AREA</div>
@@ -536,7 +558,11 @@
         </div>
         <div class="gate-slider-track" id="gate-track">
             <span class="track-label label-decline">DECLINE</span>
-            <div id="gate-knob" class="gate-knob"><span id="knob-icon" class="text-xl">🔒</span></div>
+            <div id="gate-knob" class="gate-knob">
+                <img id="knob-icon" src="assets/icons/icon-padlock-locked.png"
+                    style="width:26px;height:26px;object-fit:contain;"
+                    alt="🔒" onerror="this.outerHTML='<span class=\'text-xl\'>🔒</span>'">
+            </div>
             <span class="track-label label-admit">ADMIT</span>
         </div>
         <div id="visitors-container" class="flex flex-col items-center"></div>
@@ -865,12 +891,27 @@
         debriefP2Done: false
     };
 
-    function setAlert(text, isCritical = false) {
-        const box = document.getElementById('event-alert-box');
-        const display = document.getElementById('event-alert-text');
-        display.innerText = text;
-        if (isCritical) box.classList.add('alert-flash-red');
-        else box.classList.remove('alert-flash-red');
+    function setAlert(text) {
+        document.getElementById('event-alert-text').innerText = text;
+        document.getElementById('event-alert-box').classList.remove('alert-flash-red');
+    }
+
+    let _criticalDismissTimer = null;
+
+    function setCriticalAlert(text, autoDismissMs = 0) {
+        if (_criticalDismissTimer) { clearTimeout(_criticalDismissTimer); _criticalDismissTimer = null; }
+        const box = document.getElementById('critical-alert-box');
+        document.getElementById('critical-alert-text').innerText = text;
+        box.classList.add('visible', 'alert-flash-red');
+        if (autoDismissMs > 0) {
+            _criticalDismissTimer = setTimeout(dismissCriticalAlert, autoDismissMs);
+        }
+    }
+
+    function dismissCriticalAlert() {
+        _criticalDismissTimer = null;
+        const box = document.getElementById('critical-alert-box');
+        box.classList.remove('visible', 'alert-flash-red');
     }
 
     function formatGameTime(totalMinutes) {
@@ -1071,9 +1112,9 @@
             p => p.breakRequired && !p.onBreak && !p.onSupplyRun && !p.exitedOverwork && p.energy <= 20 && p.energy > 0
         );
         if (critical.length > 0) {
-            setAlert(`ENERGY CRITICAL: ${critical.map(p => p.name.split(' ')[0]).join(', ')}`, true);
+            setCriticalAlert(`ENERGY CRITICAL: ${critical.map(p => p.name.split(' ')[0]).join(', ')}`);
         } else {
-            document.getElementById('event-alert-box').classList.remove('alert-flash-red');
+            dismissCriticalAlert();
         }
     }
 
@@ -1341,11 +1382,12 @@
         state.isIdScanned = false;
         const track = document.getElementById('gate-track');
         if (track) { track.style.opacity = '0.3'; track.style.pointerEvents = 'none'; }
-        setAlert("SECURITY INCIDENT", true);
+        setCriticalAlert("SECURITY INCIDENT");
         log(`Security: ${event.breachedName} removed from site.`, 'warn');
         setTimeout(() => {
             container.innerHTML = '';
             if (track) { track.style.opacity = ''; track.style.pointerEvents = ''; }
+            dismissCriticalAlert();
             setAlert("Standby for Visitors");
             spawnVisitor();
         }, 4000);
@@ -1362,7 +1404,8 @@
         if (nextKey && STAGES[nextKey].development) {
             state.currentStageKey = nextKey;
             const nextStage = STAGES[nextKey];
-            setAlert(nextStage.alertMsg, true);
+            setAlert(nextStage.alertMsg);
+            setCriticalAlert(nextStage.alertMsg, 5000);
             log(nextStage.alertMsg, 'warn');
             initializePool(nextStage);
             setTimeout(spawnVisitor, 2000);
@@ -1499,7 +1542,9 @@
                     el.classList.add('slotted-card');
                     el.querySelector('#card-inner').classList.remove('flipped');
                     document.getElementById('gate-track').style.borderColor = '#fbbf24';
-                    document.getElementById('knob-icon').innerText = '🔓';
+                    const ki = document.getElementById('knob-icon');
+                    if (ki && ki.tagName === 'IMG') { ki.src = 'assets/icons/icon-padlock-unlocked.png'; ki.alt = '🔓'; }
+                    else if (ki) ki.innerText = '🔓';
                     log(`ID Logged: ${state.activeVisitor.data.name}`);
                     
                     const req = state.activeVisitor.data.ppe || [];
@@ -1630,7 +1675,9 @@
         const knob = document.getElementById('gate-knob');
         knob.style.left = '50%'; knob.style.transform = 'translateX(-50%)';
         document.getElementById('gate-track').style.borderColor = '#334155';
-        document.getElementById('knob-icon').innerText = state.isIdScanned ? '🔓' : '🔒';
+        const ki = document.getElementById('knob-icon');
+        if (ki && ki.tagName === 'IMG') { ki.src = `assets/icons/icon-padlock-${state.isIdScanned ? 'unlocked' : 'locked'}.png`; ki.alt = state.isIdScanned ? '🔓' : '🔒'; }
+        else if (ki) ki.innerText = state.isIdScanned ? '🔓' : '🔒';
     }
 
     function endGame() {
