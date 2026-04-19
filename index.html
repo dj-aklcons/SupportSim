@@ -657,23 +657,23 @@
     const BUILD_VERSION = { hash: 'c8746ac', date: '2026-04-19', time: '03:29 UTC' };
 
     const STAGES = {
-        ‘1’: {
+        '1': {
             title: "A Burst Pipe",
             startTime: "11:39",
             desc: "The cleaner has reported a burst pipe in the Level 2 bathrooms. Water is spreading toward the stacks — we need to contain it before it reaches anything irreplaceable. A Request for Service has been raised with Facilities, and contractors are on their way.",
             orders: ["Check Visitor ID cards before entry.", "Gloves are mandatory for all site entry."],
             registry: [
-                { id: "v1", name: "Libby Rarian", role: "Librarian Research", org: "Libraries", authorised: true, ppe: ["gloves"], msg: "Has anyone checked the heritage material on the shelf below? I’m worried about water damage.", energy: 100, breakRequired: false },
-                { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I’m here for the pipe repair. Which floor is the bathroom on?", energy: 100, breakRequired: false },
-                { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Someone said there’s flooding? I’ve got my gear.", energy: 100, breakRequired: false }
+                { id: "v1", name: "Libby Rarian", role: "Librarian Research", org: "Libraries", authorised: true, ppe: ["gloves"], msg: "Has anyone checked the heritage material on the shelf below? I'm worried about water damage.", energy: 100, breakRequired: false },
+                { id: "v2", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "I'm here for the pipe repair. Which floor is the bathroom on?", energy: 100, breakRequired: false },
+                { id: "v3", name: "Contractor", role: "Plumber", org: "Facilities", authorised: true, ppe: ["gloves", "vest"], msg: "Someone said there's flooding? I've got my gear.", energy: 100, breakRequired: false }
             ],
-            resources: { mask: 0, gloves: 6, vest: 4, ‘soaking-pad’: 100, ‘blotting-paper’: 100, bucket: 10 },
+            resources: { mask: 0, gloves: 6, vest: 4, 'soaking-pad': 100, 'blotting-paper': 100, bucket: 10 },
             target: 3,
-            next: ‘2’,
-            threats: [‘leak’, ‘flood’],
+            next: '2',
+            threats: ['leak', 'flood'],
             departureRegistry: [
-                { id: "v1", checkoutMsg: "The shelf’s fine — I’ve moved the material just in case. Heading off now." },
-                { id: "v2", checkoutMsg: "Pipe’s fixed. You shouldn’t get any more water through there." },
+                { id: "v1", checkoutMsg: "The shelf's fine — I've moved the material just in case. Heading off now." },
+                { id: "v2", checkoutMsg: "Pipe's fixed. You shouldn't get any more water through there." },
                 { id: "v3", checkoutMsg: "All sorted. Give us a call if it starts again." }
             ]
         },
@@ -721,25 +721,25 @@
             target: 10,
             next: '3B'
         },
-        ‘3B’: {
+        '3B': {
             development: true,
             alertMsg: "MOULD DISCOVERED — Full PPE now required. Masks mandatory for all on-site personnel.",
             registry: [
                 { id: "v18", name: "Dizzy Astrous", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "Mould confirmed in the lower stacks. We need to contain it immediately.", energy: 20, breakRequired: true },
-                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got swabs for sampling — we need to document how far it’s spread.", energy: 10, breakRequired: true },
-                { id: "v20", name: "Klee Anup", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "This is my first mould outbreak — what’s the protocol?", energy: 30, breakRequired: true },
-                { id: "v21", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["mask", "vest"], msg: "Leak’s fixed upstairs, but we’ve found damp patches in the basement wall.", energy: 100, breakRequired: false },
-                { id: "v22", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["mask", "vest"], msg: "Where do you want these soaking pads? I’ve got a full pallet outside.", energy: 100, breakRequired: false },
-                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: ["mask"], msg: "I’m swapping out the air filters — mould spores spread through the ducts.", energy: 100, breakRequired: false },
-                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve been called in for emergency salvage. What’s the priority?", energy: 5, breakRequired: true },
+                { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I've got swabs for sampling — we need to document how far it's spread.", energy: 10, breakRequired: true },
+                { id: "v20", name: "Klee Anup", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "This is my first mould outbreak — what's the protocol?", energy: 30, breakRequired: true },
+                { id: "v21", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["mask", "vest"], msg: "Leak's fixed upstairs, but we've found damp patches in the basement wall.", energy: 100, breakRequired: false },
+                { id: "v22", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["mask", "vest"], msg: "Where do you want these soaking pads? I've got a full pallet outside.", energy: 100, breakRequired: false },
+                { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: ["mask"], msg: "I'm swapping out the air filters — mould spores spread through the ducts.", energy: 100, breakRequired: false },
+                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I've been called in for emergency salvage. What's the priority?", energy: 5, breakRequired: true },
                 { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "The blotting paper is going to come in handy for the wet items.", energy: 20, breakRequired: true },
-                { id: "v26", name: "Preppe de Saster", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I’ve got food and extra supplies for the team — where should I set up?", energy: 50, breakRequired: true },
-                { id: "v27", name: "Mayor", role: "Regional", org: "Council", authorised: false, ppe: ["mask"], msg: "I’ve decided to do a site visit. It’s election year and I don’t need this.", energy: 100, breakRequired: false }
+                { id: "v26", name: "Preppe de Saster", role: "Support Team", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "I've got food and extra supplies for the team — where should I set up?", energy: 50, breakRequired: true },
+                { id: "v27", name: "Mayor", role: "Regional", org: "Council", authorised: false, ppe: ["mask"], msg: "I've decided to do a site visit. It's election year and I don't need this.", energy: 100, breakRequired: false }
             ],
             target: 10,
-            next: ‘3C’
+            next: '3C'
         },
-        ‘3C’: {
+        '3C': {
             development: true,
             title: "Disaster Response Complete",
             alertMsg: "DISASTER STABILISED — Begin site pack-down.",
@@ -747,13 +747,13 @@
                 { id: "v8",  name: "Connie Servator", role: "Conservator", org: "Libraries", authorised: true, ppe: ["mask"], msg: "Mould containment is holding. The heritage items have been moved to safe storage.", energy: -1, breakRequired: true },
                 { id: "v19", name: "Blotté Papier", role: "Conservator", org: "Libraries", authorised: true, ppe: [], msg: "Sampling is done — remediation can begin once the area is clear.", energy: -1, breakRequired: true },
                 { id: "v10", name: "Tek Nizian", role: "Conservation Tech", org: "Libraries", authorised: true, ppe: ["mask", "gloves", "vest"], msg: "RH is dropping. The dehumidifiers are doing their job.", energy: -1, breakRequired: true },
-                { id: "v28", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: [], msg: "We’ve brought extra soaking pads if you still need them.", energy: 100, breakRequired: false },
-                { id: "v29", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Is there somewhere I can park? I’ve got equipment to unload.", energy: 100, breakRequired: false },
+                { id: "v28", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: [], msg: "We've brought extra soaking pads if you still need them.", energy: 100, breakRequired: false },
+                { id: "v29", name: "Contractor", role: "General", org: "Facilities", authorised: true, ppe: ["vest"], msg: "Is there somewhere I can park? I've got equipment to unload.", energy: 100, breakRequired: false },
                 { id: "v23", name: "Contractor", role: "HVAC Tech", org: "Facilities", authorised: true, ppe: [], msg: "New filters are in — air quality should improve over the next few hours.", energy: 100, breakRequired: false },
-                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: [], msg: "Salvage priorities are handled. Team’s packing up the kit now.", energy: -1, breakRequired: true },
-                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: [], msg: "Did I see the Mayor on the CCTV earlier? Please tell me they didn’t get past the desk.", energy: -1, breakRequired: true },
-                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "I think we’re through the worst of it. What supplies do we still need before pack-down?", energy: -1, breakRequired: true },
-                { id: "v30", name: "Curator", role: "Heritage", org: "Libraries", authorised: false, ppe: [], msg: "I just need to check on the Tōtara Street serials — they’re completely irreplaceable!", energy: 100, breakRequired: false }
+                { id: "v24", name: "Frasier Bags", role: "Salvage Team Lead", org: "Libraries", authorised: true, ppe: [], msg: "Salvage priorities are handled. Team's packing up the kit now.", energy: -1, breakRequired: true },
+                { id: "v25", name: "Plaz Tic-Baggins", role: "Salvage Team", org: "Libraries", authorised: true, ppe: [], msg: "Did I see the Mayor on the CCTV earlier? Please tell me they didn't get past the desk.", energy: -1, breakRequired: true },
+                { id: "v16", name: "Sue Portman", role: "Support Team", org: "Libraries", authorised: true, ppe: [], msg: "I think we're through the worst of it. What supplies do we still need before pack-down?", energy: -1, breakRequired: true },
+                { id: "v30", name: "Curator", role: "Heritage", org: "Libraries", authorised: false, ppe: [], msg: "I just need to check on the Tōtara Street serials — they're completely irreplaceable!", energy: 100, breakRequired: false }
             ],
             target: 10,
             next: null,
@@ -762,12 +762,12 @@
                 { id: "v8",  checkoutMsg: "Heritage items are secured and documented. Tough day — great response." },
                 { id: "v19", checkoutMsg: "Mould report goes to the Manager first thing tomorrow. Thanks everyone." },
                 { id: "v10", checkoutMsg: "Sensors are logging and uploading. Conditions are stable." },
-                { id: "v24", checkoutMsg: "Salvage kit’s repacked and signed off. See you at the debrief." },
-                { id: "v25", checkoutMsg: "What a day. Hope we don’t have to do this again too soon." },
-                { id: "v16", checkoutMsg: "Site’s all clear. Good work, team — we’re wrapped up.", pinLast: true }
+                { id: "v24", checkoutMsg: "Salvage kit's repacked and signed off. See you at the debrief." },
+                { id: "v25", checkoutMsg: "What a day. Hope we don't have to do this again too soon." },
+                { id: "v16", checkoutMsg: "Site's all clear. Good work, team — we're wrapped up.", pinLast: true }
             ],
             debrief: {
-                p1: "From a leaking pipe to a full mould containment — today’s response team held the line. Every person who came through that gate was your call. The site stayed secure, the collection was protected, and the team made it home.",
+                p1: "From a leaking pipe to a full mould containment — today's response team held the line. Every person who came through that gate was your call. The site stayed secure, the collection was protected, and the team made it home.",
                 p2: "Three emergencies. One shift. The registration desk kept the team equipped, safe, and accounted for from start to finish. ID cards checked, PPE confirmed, supplies dispatched. Without the desk, no one gets on site — and today, that mattered."
             }
         }
