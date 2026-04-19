@@ -489,6 +489,21 @@
 </head>
 <body>
 
+<div id="screen-splash" style="display:none;position:fixed;inset:0;z-index:20000;background:#0f172a;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity 0.5s ease;" onclick="dismissSplash()">
+    <div style="text-align:center;padding:24px;pointer-events:none;">
+        <div style="font-size:11px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:3px;margin-bottom:12px;">Heritage Conservation</div>
+        <h1 style="font-size:32px;font-weight:900;color:#f1f5f9;text-transform:uppercase;letter-spacing:-1px;line-height:1;margin-bottom:8px;">Support Team<br>Simulator</h1>
+        <p style="font-size:10px;color:#475569;margin-bottom:48px;">Site Operations: Access &amp; Safety Control</p>
+        <div style="display:inline-block;background:#1e293b;border:1px solid #334155;border-radius:99px;padding:10px 28px;color:#94a3b8;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:2px;">Tap anywhere to begin</div>
+    </div>
+    <div style="position:absolute;bottom:16px;right:16px;text-align:right;pointer-events:none;">
+        <div style="font-size:8px;color:#334155;font-family:monospace;line-height:1.6;">
+            <span id="splash-hash"></span><br>
+            <span id="splash-date"></span>
+        </div>
+    </div>
+</div>
+
 <div id="screen-title" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;background:#0f172a;">
     <div style="height:50%;transform:rotate(180deg);border-bottom:3px solid #334155;display:flex;align-items:center;justify-content:center;padding:16px;">
         <div style="text-align:center;">
@@ -629,6 +644,8 @@
 </div>
 
 <script>
+    const BUILD_VERSION = { hash: '72a590f', date: '2026-04-19', time: '02:45 UTC' };
+
     const STAGES = {
         ‘1’: {
             title: "A Burst Pipe",
@@ -1772,7 +1789,21 @@
         else location.reload();
     }
 
-    window.onload = () => document.getElementById('screen-title').style.display = 'flex';
+    function dismissSplash() {
+        const el = document.getElementById('screen-splash');
+        el.style.opacity = '0';
+        setTimeout(() => {
+            el.style.display = 'none';
+            document.getElementById('screen-title').style.display = 'flex';
+        }, 500);
+    }
+
+    window.onload = () => {
+        const el = document.getElementById('screen-splash');
+        document.getElementById('splash-hash').textContent = 'v' + BUILD_VERSION.hash;
+        document.getElementById('splash-date').textContent = BUILD_VERSION.date + ' · ' + BUILD_VERSION.time;
+        el.style.display = 'flex';
+    };
 </script>
 </body>
 </html>
