@@ -673,9 +673,9 @@
             next: '2',
             threats: ['leak', 'flood'],
             departureRegistry: [
-                { id: "v1", checkoutMsg: "The shelf's fine — I've moved the material just in case. Heading off now." },
-                { id: "v2", checkoutMsg: "Pipe's fixed. You shouldn't get any more water through there." },
-                { id: "v3", checkoutMsg: "All sorted. Give us a call if it starts again." }
+                { id: "v1", checkoutMsg: "Checking out. The heritage material's safe — I moved it just in case." },
+                { id: "v2", checkoutMsg: "Signing off. Pipe's fixed, no more leaks from that one." },
+                { id: "v3", checkoutMsg: "All done here. Give us a call if it starts up again." }
             ]
         },
         '2': {
@@ -695,10 +695,10 @@
             next: '3A',
             threats: ['high-rh', 'mould'],
             departureRegistry: [
-                { id: "v4",  checkoutMsg: "Conditions are holding steady. I've flagged the readings for monitoring." },
-                { id: "v5",  checkoutMsg: "Dataloggers are set and recording. I'll review the data first thing tomorrow." },
-                { id: "v6",  checkoutMsg: "Unit's running again. Should cool down within the hour." },
-                { id: "v31", checkoutMsg: "Site's all clear now. We're done.", pinLast: true }
+                { id: "v4",  checkoutMsg: "Checking out. Conditions are holding steady — readings flagged for monitoring." },
+                { id: "v5",  checkoutMsg: "Leaving the site. Dataloggers are set and recording." },
+                { id: "v6",  checkoutMsg: "Done here. Unit's running again — should cool down within the hour." },
+                { id: "v31", checkoutMsg: "Heading off. Site's all clear now. Good work today.", pinLast: true }
             ]
         },
         '3A': {
@@ -760,12 +760,12 @@
             next: null,
             threats: ['leak', 'flood', 'mould', 'theft'],
             departureRegistry: [
-                { id: "v8",  checkoutMsg: "Heritage items are secured and documented. Tough day — great response." },
-                { id: "v19", checkoutMsg: "Mould report goes to the Manager first thing tomorrow. Thanks everyone." },
-                { id: "v10", checkoutMsg: "Sensors are logging and uploading. Conditions are stable." },
-                { id: "v24", checkoutMsg: "Salvage kit's repacked and signed off. See you at the debrief." },
-                { id: "v25", checkoutMsg: "What a day. Hope we don't have to do this again too soon." },
-                { id: "v16", checkoutMsg: "Site's all clear. Good work, team — we're wrapped up.", pinLast: true }
+                { id: "v8",  checkoutMsg: "Checking out. Heritage items secured and documented. Tough day, great response." },
+                { id: "v19", checkoutMsg: "Leaving the site. Mould report goes to the Manager first thing tomorrow." },
+                { id: "v10", checkoutMsg: "All done. Sensors logging and uploading — conditions are stable." },
+                { id: "v24", checkoutMsg: "Signing off. Salvage kit repacked and signed off. See you at the debrief." },
+                { id: "v25", checkoutMsg: "Done for today. What a day — hope we don't have to do this again too soon." },
+                { id: "v16", checkoutMsg: "Heading off. Good work, team. We're all wrapped up.", pinLast: true }
             ],
             debrief: {
                 p1: "From a leaking pipe to a full mould containment — today's response team held the line. Every person who came through that gate was your call. The site stayed secure, the collection was protected, and the team made it home.",
@@ -1131,7 +1131,7 @@
         const middle = rawPool.filter(p => !p.pinFirst && !p.pinLast).sort(() => Math.random() - 0.5);
         state.pool = [...first, ...middle, ...last];
         state.departureMode = true;
-        setAlert("SITE PACK-DOWN — Check out departing personnel");
+        setAlert("SITE PACK-DOWN — Personnel are leaving");
         updateRegistryUI();
     }
 
@@ -1240,7 +1240,7 @@
         }
         state.isIdScanned = false;
         resetSlider();
-        setAlert("SITE PACK-DOWN — Check out departing personnel");
+        setAlert("SITE PACK-DOWN — Personnel are leaving");
         setTimeout(spawnVisitor, 2000);
     }
 
@@ -1377,7 +1377,7 @@
         visitor.innerHTML = avatarImg(data.id, 85);
         visitor.onclick = () => {
             createIDCard(data, visitor);
-            setAlert(state.departureMode ? "Personnel Checking Out — Uncheck ONSITE to confirm" : "Visitor Arrived — Check Status");
+            setAlert(state.departureMode ? "JOB COMPLETE: CHECK ID AND UNCHECK ONSITE STATUS" : "Visitor Arrived — Check Status");
         };
         const bubble = document.createElement('div');
         bubble.className = 'speech-bubble';
@@ -1391,7 +1391,7 @@
             const person = state.staffOnSite.find(p => p.id === data.id);
             if (person) person.checkoutMsg = data.msg;
             updateRegistryUI();
-            setAlert(`${data.name} checking out — P2: uncheck ONSITE to confirm`);
+            setAlert("JOB COMPLETE: CHECK ID AND UNCHECK ONSITE STATUS");
         }
     }
 
